@@ -1,0 +1,40 @@
+Design three mobile screens for a private golf trip scoreboard — 7 friends,
+4 rounds at Sand Valley Resort in Wisconsin, cumulative net Stableford.
+Phone-first; it will be opened on iPhones, occasionally on a laptop.
+
+Screen 1 — Leaderboard. 7 players ranked by cumulative Stableford points.
+Each row: position, name, total points, points-back-from-leader, and a
+small per-round breakdown (4 round scores). The leader should feel
+obviously like the leader. Rows need to be readable at a glance on a
+phone at a bar.
+
+Screen 2 — Score entry. One player's 18 holes at a time. Big numeric
+keypad, auto-advance to the next hole, a strip showing the 18 holes
+with pars and which ones this player gets a stroke on. A running total
+at the top. Needs to be fast — I'm entering 126 numbers after each round.
+
+Screen 3 — Stats. Everything here derives from ONE input: gross strokes
+per hole. No putts, no fairways, no GIR — do not design anything that
+needs data beyond strokes, par, and hole stroke index.
+
+Aesthetic: links golf, sand dunes, fescue. Restrained, not a corporate
+sports app, not neon. Real typographic personality. Think a well-made
+printed scorecard rather than a fantasy-football dashboard.
+
+Give me the design tokens (colors, type scale, spacing) as CSS variables
+alongside the screens so I can hand them to an engineer.
+
+Show:
+- Each player's scoring average vs par on par 3s, par 4s, par 5s, and
+  Stableford points earned per hole type. This is the centrepiece —
+  it should make it instantly obvious who's the par-5 assassin and who
+  can't hit a green on a par 3.
+- Group-wide hardest and easiest holes across the trip (actual scoring
+  average vs the card's stroke index — the fun is where they disagree).
+- Birdie / par / bogey / blow-up counts per player.
+- A few earned superlatives: most points in a single round, longest
+  streak of holes with points, most blow-ups.
+
+Tone: the leaderboard is the official record, this screen is the
+argument at the bar. It can be looser and more playful, but it still
+has to be legible on a phone and consistent with the same design tokens.

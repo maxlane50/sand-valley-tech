@@ -1,0 +1,51 @@
+[
+  {
+    "id": "lido",
+    "name": "The Lido",
+    "par": 72,
+    "tees": [
+      { "name": "White", "rating": 72.5, "slope": 144, "yards": 6504 }
+    ],
+    "holes": [
+      { "hole": 1,  "par": 4, "si": 11, "yards": 375 },
+      { "hole": 2,  "par": 4, "si": 7,  "yards": 393 },
+      { "hole": 3,  "par": 3, "si": 15, "yards": 158 },
+      { "hole": 4,  "par": 5, "si": 1,  "yards": 529 },
+      { "hole": 5,  "par": 4, "si": 13, "yards": 335 },
+      { "hole": 6,  "par": 5, "si": 3,  "yards": 457 },
+      { "hole": 7,  "par": 5, "si": 5,  "yards": 471 },
+      { "hole": 8,  "par": 3, "si": 9,  "yards": 212 },
+      { "hole": 9,  "par": 4, "si": 17, "yards": 336 },
+      { "hole": 10, "par": 4, "si": 6,  "yards": 392 },
+      { "hole": 11, "par": 4, "si": 8,  "yards": 425 },
+      { "hole": 12, "par": 4, "si": 2,  "yards": 412 },
+      { "hole": 13, "par": 4, "si": 16, "yards": 318 },
+      { "hole": 14, "par": 3, "si": 18, "yards": 128 },
+      { "hole": 15, "par": 4, "si": 10, "yards": 386 },
+      { "hole": 16, "par": 3, "si": 12, "yards": 201 },
+      { "hole": 17, "par": 5, "si": 4,  "yards": 552 },
+      { "hole": 18, "par": 4, "si": 14, "yards": 424 }
+    ]
+  },
+  {
+    "id": "sand-valley",
+    "name": "Sand Valley",
+    "par": null,
+    "tees": [],
+    "holes": []
+  },
+  {
+    "id": "mammoth-dunes",
+    "name": "Mammoth Dunes",
+    "par": null,
+    "tees": [],
+    "holes": []
+  },
+  {
+    "id": "sedge-valley",
+    "name": "Sedge Valley",
+    "par": null,
+    "tees": [],
+    "holes": []
+  }
+]

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* ── color ─────────────────────────────── */
+  --paper:#F5F0E3; --paper-2:#EBE4D2; --paper-3:#DFD6BF;
+  --ink:#1E2318; --ink-70:#4C5241; --ink-45:#7E8471; --ink-25:#AEB29E;
+  --rule:#D3C8AE; --rule-strong:#B9AC8C;
+  --turf:#2E4A31; --turf-deep:#1F3323; --fescue:#A79556; --sand:#D9BA83;
+  --flag:#AE4326; --water:#4A6C79;
+  /* ── type ──────────────────────────────── */
+  --font-display:"Newsreader",Georgia,serif;
+  --font-ui:"Archivo","Helvetica Neue",sans-serif;
+  --font-num:"IBM Plex Mono",ui-monospace,monospace;
+  --fs-display:34px; --fs-h1:24px; --fs-h2:18px; --fs-body:15px;
+  --fs-num-xl:40px; --fs-num-l:26px; --fs-num-m:17px; --fs-micro:11px; --fs-nano:9px;
+  --ls-label:.14em; --lh-tight:1.05; --lh-body:1.45;
+  /* ── space / shape ─────────────────────── */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px; --sp-7:48px;
+  --r-sm:3px; --r-md:6px; --r-lg:10px; --hit-min:44px;
+  --border-hair:1px solid var(--rule); --border-strong:1.5px solid var(--ink);
+}
+body{margin:0;background:#CFC5AC;-webkit-font-smoothing:antialiased;}
+a{color:#2E4A31;text-decoration:underline;text-underline-offset:2px}
+a:hover{color:#AE4326}
+::-webkit-scrollbar{width:0;height:0}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#CFC5AC;background-image:radial-gradient(#C3B79B 1px,transparent 1px);background-size:5px 5px;padding:44px 40px 72px;font-family:'Archivo',sans-serif;box-sizing:border-box">
+
+  <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:32px;max-width:1500px">
+    <div style="font-family:'Archivo',sans-serif;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#4C5241">Sand Valley Resort · Nekoosa, Wisconsin · Aug 2026</div>
+    <div style="font-family:'Newsreader',serif;font-size:38px;line-height:1.05;color:#1E2318">The Flynn Cup <span style="font-style:italic;color:#4C5241">presented by The Jesse White Tumblers</span></div>
+  </div>
+
+  <div style="display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap">
+
+    <!-- ══════════ SCREEN 1 — LEADERBOARD ══════════ -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241">01</span><span style="font-family:'Archivo',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1E2318">Leaderboard</span></div>
+      <div style="width:390px;height:844px;background:#F5F0E3;border-radius:26px;box-shadow:0 18px 40px rgba(30,35,24,.28);overflow:hidden;display:flex;flex-direction:column;position:relative">
+
+        <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241;background:#EBE4D2">
+          <span>9:41</span><span style="letter-spacing:.1em">▮▮▮ ᯤ 68%</span>
+        </div>
+
+        <div style="flex:none;padding:16px 18px 12px;background:#EBE4D2;border-bottom:1.5px solid #1E2318">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7E8471">Cumulative net stableford</div>
+              <div style="font-family:'Newsreader',serif;font-size:26px;line-height:1.05;color:#1E2318">The Flynn Cup</div>
+              <div style="font-family:'Archivo',sans-serif;font-size:8px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#7E8471">presented by The Jesse White Tumblers</div>
+            </div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241;text-align:right;line-height:1.5">R4 · thru 18<br>72 holes played</div>
+          </div>
+        </div>
+
+        <div style="flex:none;display:grid;grid-template-columns:26px 1fr 76px 46px;gap:8px;padding:9px 18px 7px;font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#7E8471;border-bottom:1px solid #D3C8AE;background:#F5F0E3">
+          <div>Pos</div><div>Player</div><div style="text-align:right">Rounds</div><div style="text-align:right">Pts</div>
+        </div>
+
+        <div style="flex:1;overflow:auto;background:#F5F0E3">
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="7">
+            <div style="display:grid;grid-template-columns:26px 1fr 76px 46px;gap:8px;align-items:center;padding:11px 18px;border-bottom:1px solid #E0D8C3;background:{{ r.rowBg }}">
+              <div style="display:flex;flex-direction:column;align-items:flex-start">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:500;color:{{ r.posColor }}">{{ r.pos }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:{{ r.moveColor }}">{{ r.move }}</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <div style="font-family:'Newsreader',serif;font-size:{{ r.nameSize }};line-height:1.1;color:{{ r.nameColor }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+                <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:{{ r.subColor }}">{{ r.sub }}</div>
+              </div>
+              <div style="display:flex;gap:3px;justify-content:flex-end">
+                <sc-for list="{{ r.rounds }}" as="rd" hint-placeholder-count="4">
+                  <div style="width:16px;padding:3px 0;text-align:center;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;background:{{ rd.bg }};color:{{ rd.fg }}">{{ rd.v }}</div>
+                </sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:{{ r.ptsSize }};font-weight:600;line-height:1;color:{{ r.nameColor }}">{{ r.total }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:{{ r.backColor }}">{{ r.back }}</span>
+              </div>
+            </div>
+          </sc-for>
+
+          <div style="padding:14px 18px 22px;display:flex;flex-direction:column;gap:8px">
+            <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7E8471">Rounds</div>
+            <sc-for list="{{ courses }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding-bottom:6px;border-bottom:1px dotted #D3C8AE">
+                <div style="display:flex;gap:8px;align-items:baseline"><span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#AEB29E">R{{ c.n }}</span><span style="font-family:'Newsreader',serif;font-size:14px;color:#1E2318">{{ c.name }}</span></div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4C5241">par {{ c.par }} · low {{ c.low }} {{ c.lowBy }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1.5px solid #1E2318;background:#EBE4D2">
+          <div style="padding:12px 0 16px;text-align:center;font-family:'Archivo',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#1E2318;border-bottom:2px solid #2E4A31">Board</div>
+          <div style="padding:12px 0 16px;text-align:center;font-family:'Archivo',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#7E8471">Enter</div>
+          <div style="padding:12px 0 16px;text-align:center;font-family:'Archivo',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#7E8471">Stats</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ SCREEN 2 — SCORE ENTRY ══════════ -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241">02</span><span style="font-family:'Archivo',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1E2318">Score entry</span></div>
+      <div style="width:390px;height:844px;background:#F5F0E3;border-radius:26px;box-shadow:0 18px 40px rgba(30,35,24,.28);overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#F5F0E3;background:#1F3323">
+          <span>9:41</span><span style="letter-spacing:.1em">▮▮▮ ᯤ 68%</span>
+        </div>
+
+        <div style="flex:none;background:#1F3323;color:#F5F0E3;padding:12px 18px 14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+              <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#A79556">R{{ entry.round }} · {{ entry.course }} · hcp {{ entry.hcp }}</div>
+              <div style="display:flex;align-items:baseline;gap:8px">
+                <span style="font-family:'Newsreader',serif;font-size:25px;line-height:1;">{{ entry.player }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#AEB29E">◀ ▶</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:14px;text-align:right;flex:none">
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;line-height:1">{{ entry.grossTotal }}</span><span style="font-family:'Archivo',sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#AEB29E">gross {{ entry.vsPar }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:1px"><span style="font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;line-height:1;color:#D9BA83">{{ entry.points }}</span><span style="font-family:'Archivo',sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#AEB29E">pts · thru {{ entry.thru }}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex:none;padding:10px 12px 12px;background:#EBE4D2;border-bottom:1px solid #B9AC8C">
+          <div style="display:flex;justify-content:space-between;padding:0 2px 6px;font-family:'Archivo',sans-serif;font-size:8px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#7E8471"><span>Hole</span><span>• stroke given</span></div>
+          <div style="display:flex;gap:2px">
+            <sc-for list="{{ entry.holes }}" as="h" hint-placeholder-count="18">
+              <div onClick="{{ h.onSelect }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0 3px;border-radius:3px;cursor:pointer;background:{{ h.bg }};outline:{{ h.ring }}">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:{{ h.numColor }}">{{ h.n }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;line-height:1.1;color:{{ h.scoreColor }}">{{ h.score }}</span>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:{{ h.parColor }}">{{ h.par }}</span>
+                <span style="font-size:7px;line-height:1;color:{{ h.dotColor }}">●</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:none;height:118px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;background:#F5F0E3;padding:0 18px">
+          <div style="white-space:nowrap;font-family:'Archivo',sans-serif;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7E8471">Hole {{ entry.activeHole }} · par {{ entry.activePar }} · si {{ entry.activeSI }}{{ entry.strokeMark }}</div>
+          <div style="display:flex;align-items:baseline;gap:10px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:52px;font-weight:600;line-height:1;color:#1E2318">{{ entry.activeScore }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:#4C5241">{{ entry.activePts }}</span>
+          </div>
+        </div>
+
+        <div style="flex:1;overflow:auto;background:#EFE9DA;border-top:1px solid #D3C8AE">
+          <div style="display:grid;grid-template-columns:34px 1fr 34px 34px 34px;gap:4px;padding:7px 14px 5px;font-family:'Archivo',sans-serif;font-size:8px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7E8471;border-bottom:1px solid #D3C8AE">
+            <div>Hole</div><div>Par / SI</div><div style="text-align:right">Gr</div><div style="text-align:right">Net</div><div style="text-align:right">Pts</div>
+          </div>
+          <sc-for list="{{ entry.rows }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:34px 1fr 34px 34px 34px;gap:4px;align-items:center;padding:5px 14px;border-bottom:1px solid #E2DAC5;background:{{ r.bg }}">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ r.numColor }}">{{ r.n }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7E8471">{{ r.parsi }}</span>
+              <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#1E2318">{{ r.gross }}</span>
+              <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241">{{ r.net }}</span>
+              <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:{{ r.ptsColor }}">{{ r.pts }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="flex:none;padding:8px 12px 20px;background:#EBE4D2;border-top:1px solid #B9AC8C;display:flex;flex-direction:column;gap:6px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+            <sc-for list="{{ entry.keys }}" as="k" hint-placeholder-count="12">
+              <div onClick="{{ k.onTap }}" style="height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:6px;cursor:pointer;user-select:none;background:{{ k.bg }};color:{{ k.fg }};border:1px solid {{ k.border }}" style-active="transform:translateY(1px);filter:brightness(.94)">
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:{{ k.size }};font-weight:600;line-height:1">{{ k.label }}</span>
+                <span style="font-family:'Archivo',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.62">{{ k.note }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;justify-content:flex-end;font-family:'Archivo',sans-serif;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#7E8471">
+            <span onClick="{{ entry.onReset }}" style="cursor:pointer">↺ Clear card</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ SCREEN 3 — STATS ══════════ -->
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241">03</span><span style="font-family:'Archivo',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1E2318">Stats</span></div>
+      <div style="width:390px;height:844px;background:#F5F0E3;border-radius:26px;box-shadow:0 18px 40px rgba(30,35,24,.28);overflow:hidden;display:flex;flex-direction:column">
+
+        <div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241;background:#EBE4D2">
+          <span>9:41</span><span style="letter-spacing:.1em">▮▮▮ ᯤ 68%</span>
+        </div>
+
+        <div style="flex:1;overflow:auto">
+          <div style="padding:16px 18px 14px;background:#EBE4D2;border-bottom:1.5px solid #1E2318">
+            <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#7E8471">The Flynn Cup · 72 holes</div>
+            <div style="font-family:'Newsreader',serif;font-size:29px;line-height:1.05;color:#1E2318">Stats</div>
+          </div>
+
+          <!-- A · centrepiece -->
+          <div style="padding:18px 18px 8px">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#AE4326">A</span><span style="font-family:'Newsreader',serif;font-size:19px;color:#1E2318">By hole type</span></div>
+            <div style="display:grid;grid-template-columns:1fr 52px 52px 52px;gap:6px;padding-bottom:6px;border-bottom:1.5px solid #1E2318;font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#7E8471">
+              <div>Player</div><div style="text-align:center">Par 3</div><div style="text-align:center">Par 4</div><div style="text-align:center">Par 5</div>
+            </div>
+            <sc-for list="{{ byType }}" as="p" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:1fr 52px 52px 52px;gap:6px;align-items:center;padding:9px 0;border-bottom:1px solid #E0D8C3">
+                <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+                  <span style="font-family:'Newsreader',serif;font-size:15px;line-height:1.1;color:#1E2318">{{ p.name }}</span>
+                  <span style="font-family:'Archivo',sans-serif;font-size:8px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{{ p.tagColor }}">{{ p.tag }}</span>
+                </div>
+                <sc-for list="{{ p.cells }}" as="c" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 0;border-radius:4px;background:{{ c.bg }}">
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;line-height:1;color:{{ c.avgColor }}">{{ c.avg }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#4C5241">{{ c.pts }} pt</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+            <div style="padding-top:7px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#7E8471">big number = strokes vs par · small = net Stableford pts per hole</div>
+          </div>
+
+          <!-- B · hardest / easiest -->
+          <div style="margin:14px 0 0;padding:18px;background:#EBE4D2;border-top:1px solid #B9AC8C;border-bottom:1px solid #B9AC8C">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#AE4326">B</span><span style="font-family:'Newsreader',serif;font-size:19px;color:#1E2318">Hardest &amp; easiest holes</span></div>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <sc-for list="{{ holeGroups }}" as="g" hint-placeholder-count="2">
+                <div>
+                  <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:{{ g.color }};padding-bottom:5px">{{ g.title }}</div>
+                  <sc-for list="{{ g.holes }}" as="h" hint-placeholder-count="3">
+                    <div style="display:grid;grid-template-columns:1fr 46px 40px 44px;gap:6px;align-items:center;padding:7px 0;border-top:1px solid #DFD6BF">
+                      <div style="display:flex;flex-direction:column;gap:1px;min-width:0">
+                        <span style="font-family:'Newsreader',serif;font-size:14px;line-height:1.1;color:#1E2318">{{ h.label }}</span>
+                        <span style="font-family:'Archivo',sans-serif;font-size:8px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#7E8471">{{ h.course }}</span>
+                      </div>
+                      <div style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:600;color:{{ g.color }}">{{ h.avg }}</div>
+                      <div style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241">SI {{ h.si }}</div>
+                      <div style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;color:{{ h.dColor }}">{{ h.delta }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-for>
+            </div>
+            <div style="padding-top:9px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#7E8471">Δ = printed SI rank minus our actual rank (1 = hardest of 72)</div>
+          </div>
+
+          <!-- C · counts -->
+          <div style="padding:18px">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#AE4326">C</span><span style="font-family:'Newsreader',serif;font-size:19px;color:#1E2318">Scoring counts</span></div>
+            <div style="display:grid;grid-template-columns:1fr 34px 34px 34px 40px;gap:5px;padding-bottom:6px;border-bottom:1.5px solid #1E2318;font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7E8471">
+              <div>Player</div><div style="text-align:right">Bird</div><div style="text-align:right">Par</div><div style="text-align:right">Bog</div><div style="text-align:right">Blow</div>
+            </div>
+            <sc-for list="{{ counts }}" as="c" hint-placeholder-count="7">
+              <div style="display:grid;grid-template-columns:1fr 34px 34px 34px 40px;gap:5px;align-items:center;padding:8px 0;border-bottom:1px solid #E0D8C3">
+                <span style="font-family:'Newsreader',serif;font-size:15px;color:#1E2318;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:{{ c.birdColor }}">{{ c.birdies }}</span>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#1E2318">{{ c.pars }}</span>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;color:#4C5241">{{ c.bogeys }}</span>
+                <span style="text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:{{ c.blowColor }}">{{ c.blowups }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- D · superlatives -->
+          <div style="padding:18px 18px 40px;background:#1F3323">
+            <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#D9BA83">D</span><span style="font-family:'Newsreader',serif;font-size:19px;color:#F5F0E3">Superlatives</span></div>
+            <div style="display:flex;flex-direction:column;gap:1px">
+              <sc-for list="{{ supers }}" as="s" hint-placeholder-count="4">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #33502F">
+                  <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                    <span style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#A79556">{{ s.label }}</span>
+                    <span style="font-family:'Newsreader',serif;font-size:19px;line-height:1.1;color:#F5F0E3">{{ s.name }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9FAE96">{{ s.note }}</span>
+                  </div>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;line-height:1;color:#D9BA83;flex:none">{{ s.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ TOKENS ══════════ -->
+    <div style="display:flex;flex-direction:column;gap:10px;width:440px">
+      <div style="display:flex;align-items:baseline;gap:8px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4C5241">04</span><span style="font-family:'Archivo',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1E2318">Design tokens — for the engineer</span></div>
+      <div style="background:#F5F0E3;border:1.5px solid #1E2318;border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7E8471">Palette · sand, fescue, ink</div>
+          <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">
+            <sc-for list="{{ swatches }}" as="s" hint-placeholder-count="14">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:26px;height:26px;border-radius:3px;border:1px solid #B9AC8C;flex:none;background:{{ s.hex }}"></div>
+                <div style="display:flex;flex-direction:column;min-width:0">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#1E2318;white-space:nowrap">{{ s.name }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#7E8471">{{ s.hex }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #D3C8AE;padding-top:16px">
+          <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7E8471">Type</div>
+          <div style="font-family:'Newsreader',serif;font-size:30px;line-height:1.05;color:#1E2318">Newsreader <span style="font-style:italic">— display, names, voice</span></div>
+          <div style="font-family:'Archivo',sans-serif;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#1E2318">Archivo — labels, nav, chrome</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:#1E2318">IBM Plex Mono — 0123456789 tabular</div>
+        </div>
+        <div style="border-top:1px solid #D3C8AE;padding-top:16px">
+          <div style="font-family:'Archivo',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7E8471;padding-bottom:8px">tokens.css</div>
+          <pre style="margin:0;padding:14px;background:#EBE4D2;border-radius:5px;overflow:auto;max-height:520px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:#1E2318;white-space:pre">{{ tokensCss }}</pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const PLAYERS = [
+  { name: "Marty D.",   hcp: 4,  p3: 0.10,  p5: 0.30,  wild: 0.13, tag: "" },
+  { name: "Cheech",     hcp: 8,  p3: 0.95,  p5: -0.55, wild: 0.07, tag: "" },
+  { name: "Big Wes",    hcp: 11, p3: -0.55, p5: 0.85,  wild: 0.06, tag: "" },
+  { name: "Coop",       hcp: 14, p3: 0.20,  p5: -0.70, wild: 0.12, tag: "" },
+  { name: "Dez",        hcp: 16, p3: 1.15,  p5: -0.30, wild: 0.09, tag: "" },
+  { name: "Hollis",     hcp: 20, p3: -0.45, p5: 0.25,  wild: 0.13, tag: "" },
+  { name: "Tank Reilly", hcp: 22, p3: 0.40, p5: -0.80, wild: 0.14, tag: "" }
+];
+
+const COURSES = [
+  { name: "Sand Valley",  short: "Sand Valley",
+    par: [4,5,4,3,4,4,5,3,4, 4,3,5,4,4,3,4,5,4],
+    si:  [7,11,3,15,1,9,13,17,5, 8,16,12,2,6,18,4,14,10] },
+  { name: "Mammoth Dunes", short: "Mammoth Dunes",
+    par: [4,4,3,5,4,4,3,5,4, 4,5,3,4,4,5,3,4,5],
+    si:  [5,9,17,11,1,7,15,13,3, 6,10,18,2,8,12,16,4,14] },
+  { name: "Sedge Valley",  short: "Sedge Valley",
+    par: [4,3,4,4,3,5,4,3,4, 4,4,3,5,4,3,4,4,3],
+    si:  [3,13,1,7,17,11,5,15,9, 4,8,16,12,2,18,6,10,14] },
+  { name: "The Lido",      short: "The Lido",
+    par: [4,4,5,3,4,4,3,5,4, 4,3,4,5,4,3,4,4,5],
+    si:  [9,1,13,17,3,7,15,11,5, 10,18,2,12,6,16,4,8,14] }
+];
+
+const TRIP_VERSION = 5;
+
+function mulberry(a) {
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function strokesOnHole(hcp, si) {
+  const base = Math.floor(hcp / 18);
+  return base + (si <= hcp % 18 ? 1 : 0);
+}
+function stableford(par, net) { return Math.max(0, 2 - (net - par)); }
+
+function buildTrip() {
+  const rand = mulberry(20260813);
+  const gauss = () => (rand() + rand() + rand() - 1.5) * 0.80;
+  const rounds = COURSES.map((course, ri) =>
+    PLAYERS.map((pl) => {
+      const gross = [], pts = [];
+      for (let h = 0; h < 18; h++) {
+        const par = course.par[h], si = course.si[h];
+        let e = (pl.hcp / 18) * (0.55 + 1.05 * (19 - si) / 19);
+        if (par === 3) e += pl.p3;
+        if (par === 5) e += pl.p5;
+        let d = Math.round(e + gauss() - 0.18);
+        if (par === 5 && rand() < 0.16) d -= 1;
+        if (par === 3 && rand() < 0.08) d -= 1;
+        if (rand() < pl.wild) d += 2 + (rand() < 0.3 ? 1 : 0); // everyone blows one up
+        d = Math.max(par === 3 ? -1 : -2, Math.min(5, d));
+        const g = Math.max(1, par + d);
+        const net = g - strokesOnHole(pl.hcp, si);
+        gross.push(g); pts.push(stableford(par, net));
+      }
+      return { gross, pts, ri };
+    })
+  );
+  return rounds;
+}
+
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    const trip = buildTrip();
+    // score-entry demo card: round 3 (Sedge Valley), Big Wes, live through 11
+    const pIdx = 2, rIdx = 2;
+    const seed = trip[rIdx][pIdx].gross;
+    const scores = seed.slice(0, 11).concat(new Array(7).fill(null));
+    this.trip = trip;
+    this.state = { scores, active: 11 };
+  }
+
+  setHole(v) {
+    this.setState((s) => {
+      const scores = s.scores.slice();
+      scores[s.active] = v;
+      let nxt = s.active;
+      for (let i = 1; i <= 18; i++) {
+        const k = (s.active + i) % 18;
+        if (scores[k] == null) { nxt = k; break; }
+      }
+      return { scores, active: nxt };
+    });
+  }
+
+  getTrip() {
+    if (!this._trip || this._tv !== TRIP_VERSION) { this._trip = buildTrip(); this._tv = TRIP_VERSION; }
+    return this._trip;
+  }
+
+  renderVals() {
+    const trip = this.getTrip();
+    const C = { ink: "#1E2318", ink70: "#4C5241", ink45: "#7E8471", ink25: "#AEB29E",
+                turf: "#2E4A31", turfDeep: "#1F3323", fescue: "#A79556", sand: "#D9BA83",
+                flag: "#AE4326", paper: "#F5F0E3", paper2: "#EBE4D2", paper3: "#DFD6BF", rule: "#D3C8AE" };
+
+    /* ── leaderboard ───────────────────────── */
+    const totals = PLAYERS.map((pl, i) => {
+      const perRound = trip.map((r) => r[i].pts.reduce((a, b) => a + b, 0));
+      const grossRound = trip.map((r) => r[i].gross.reduce((a, b) => a + b, 0));
+      return { i, pl, perRound, grossRound, total: perRound.reduce((a, b) => a + b, 0) };
+    });
+    const sorted = totals.slice().sort((a, b) => b.total - a.total);
+    const lead = sorted[0].total;
+    const bestRound = Math.max.apply(null, totals.map((t) => Math.max.apply(null, t.perRound)));
+
+    const rows = sorted.map((t, idx) => {
+      const leader = idx === 0;
+      const back = leader ? "—" : "-" + (lead - t.total);
+      const r3 = t.perRound[3], r2 = t.perRound[2];
+      const move = leader ? "★" : r3 > r2 ? "▲" : r3 < r2 ? "▼" : "–";
+      return {
+        pos: idx + 1, name: t.pl.name, total: t.total, back,
+        sub: "hcp " + t.pl.hcp + " · gross " + t.grossRound.reduce((a, b) => a + b, 0),
+        move,
+        rowBg: leader ? C.turfDeep : idx % 2 ? "#F1EBDD" : C.paper,
+        nameColor: leader ? C.paper : C.ink,
+        subColor: leader ? C.fescue : C.ink45,
+        posColor: leader ? C.sand : C.ink45,
+        moveColor: leader ? C.sand : move === "▲" ? C.turf : move === "▼" ? C.flag : C.ink25,
+        backColor: leader ? C.fescue : C.ink45,
+        nameSize: leader ? "22px" : "17px",
+        ptsSize: leader ? "27px" : "20px",
+        rounds: t.perRound.map((v) => ({
+          v,
+          bg: v === bestRound ? C.sand : leader ? "#33502F" : C.paper2,
+          fg: v === bestRound ? C.ink : leader ? C.paper : C.ink70
+        }))
+      };
+    });
+
+    const courses = COURSES.map((c, ri) => {
+      const parTot = c.par.reduce((a, b) => a + b, 0);
+      const best = totals.slice().sort((a, b) => b.perRound[ri] - a.perRound[ri])[0];
+      return { n: ri + 1, name: c.name, par: parTot, low: best.pl.name, lowBy: "(" + best.perRound[ri] + ")" };
+    });
+
+    /* ── score entry ───────────────────────── */
+    const course = COURSES[2], pl = PLAYERS[2], sc = this.state.scores, act = this.state.active;
+    const holes = course.par.map((par, h) => {
+      const si = course.si[h], st = strokesOnHole(pl.hcp, si), v = sc[h];
+      const isAct = h === act;
+      const pts = v == null ? null : stableford(par, v - st);
+      return {
+        n: h + 1, par, score: v == null ? "·" : v,
+        onSelect: () => this.setState({ active: h }),
+        bg: isAct ? C.turfDeep : v == null ? "transparent" : "#E2DAC5",
+        ring: isAct ? "1.5px solid " + C.ink : "none",
+        numColor: isAct ? C.fescue : C.ink45,
+        parColor: isAct ? C.ink25 : "#B9AC8C",
+        scoreColor: isAct ? C.paper : v == null ? C.ink25 : pts === 0 ? C.flag : C.ink,
+        dotColor: st > 0 ? (isAct ? C.sand : C.flag) : "transparent"
+      };
+    });
+    const played = sc.filter((v) => v != null);
+    const grossTotal = played.reduce((a, b) => a + b, 0);
+    const parThru = course.par.reduce((a, p, h) => a + (sc[h] == null ? 0 : p), 0);
+    const ptsTotal = sc.reduce((a, v, h) => a + (v == null ? 0 : stableford(course.par[h], v - strokesOnHole(pl.hcp, course.si[h]))), 0);
+    const aPar = course.par[act], aSI = course.si[act], aSt = strokesOnHole(pl.hcp, aSI);
+    const aV = sc[act];
+    const aPts = aV == null ? null : stableford(aPar, aV - aSt);
+    const keys = [];
+    for (let n = 1; n <= 9; n++) {
+      const rel = n - aPar;
+      keys.push({
+        label: n, size: "22px",
+        note: rel === 0 ? "par" : (rel > 0 ? "+" + rel : String(rel)),
+        onTap: () => this.setHole(n),
+        bg: n === aPar ? C.turfDeep : C.paper,
+        fg: n === aPar ? C.paper : C.ink,
+        border: n === aPar ? C.turfDeep : "#C6BAA0"
+      });
+    }
+    keys.push({ label: "10+", size: "17px", note: "", onTap: () => this.setHole(10), bg: C.paper2, fg: C.ink70, border: "#C6BAA0" });
+    keys.push({ label: "—", size: "20px", note: "no score", onTap: () => this.setHole(null), bg: C.paper2, fg: C.ink70, border: "#C6BAA0" });
+    keys.push({ label: "⌫", size: "20px", note: "", onTap: () => this.setState((s) => {
+      const scores = s.scores.slice(); const prev = (s.active + 17) % 18; scores[prev] = null; return { scores, active: prev };
+    }), bg: C.paper2, fg: C.flag, border: "#C6BAA0" });
+
+    const entry = {
+      round: 3, course: course.short, player: pl.name, hcp: pl.hcp,
+      grossTotal, vsPar: (grossTotal - parThru >= 0 ? "+" : "") + (grossTotal - parThru),
+      points: ptsTotal, thru: played.length,
+      activeHole: act + 1, activePar: aPar, activeSI: aSI,
+      activeScore: aV == null ? "–" : aV,
+      activePts: aPts == null ? "" : aPts + " pts",
+      strokeMark: aSt > 0 ? " · +" + aSt : "",
+      rows: course.par.map((par, h) => {
+        const si = course.si[h], st = strokesOnHole(pl.hcp, si), v = sc[h];
+        const net = v == null ? null : v - st, p = v == null ? null : stableford(par, net);
+        return {
+          n: h + 1, parsi: "par " + par + " · si " + si + (st ? " · +" + st : ""),
+          gross: v == null ? "·" : v, net: net == null ? "·" : net, pts: p == null ? "·" : p,
+          bg: h === act ? "#E4DCC6" : "transparent",
+          numColor: h === act ? C.ink : C.ink45,
+          ptsColor: p === 0 ? C.flag : p >= 3 ? C.turf : C.ink
+        };
+      }).filter((r, h) => sc[h] != null || h === act).reverse(),
+      holes, keys,
+      onReset: () => this.setState({ scores: new Array(18).fill(null), active: 0 })
+    };
+
+    /* ── stats ─────────────────────────────── */
+    const agg = PLAYERS.map((p, i) => {
+      const t = { 3: { n: 0, over: 0, pts: 0 }, 4: { n: 0, over: 0, pts: 0 }, 5: { n: 0, over: 0, pts: 0 } };
+      let bird = 0, pars = 0, bog = 0, blow = 0, streak = 0, bestStreak = 0;
+      trip.forEach((r, ri) => {
+        const cr = COURSES[ri];
+        r[i].gross.forEach((g, h) => {
+          const par = cr.par[h], d = g - par, b = t[par];
+          b.n++; b.over += d; b.pts += r[i].pts[h];
+          if (d <= -1) bird++; else if (d === 0) pars++; else if (d === 1) bog++; else blow++;
+          if (r[i].pts[h] > 0) { streak++; bestStreak = Math.max(bestStreak, streak); } else streak = 0;
+        });
+      });
+      return { i, name: p.name, t, bird, pars, bog, blow, bestStreak };
+    });
+    const avg = (b) => b.over / b.n, ppl = (b) => b.pts / b.n;
+    const bestP5 = agg.slice().sort((a, b) => avg(a.t[5]) - avg(b.t[5]))[0].i;
+    const worstP3 = agg.slice().sort((a, b) => avg(b.t[3]) - avg(a.t[3]))[0].i;
+    const bestP3 = agg.slice().sort((a, b) => avg(a.t[3]) - avg(b.t[3]))[0].i;
+    const mostBlow = agg.slice().sort((a, b) => b.blow - a.blow)[0];
+    const mostBird = agg.slice().sort((a, b) => b.bird - a.bird)[0];
+    const longest = agg.slice().sort((a, b) => b.bestStreak - a.bestStreak)[0];
+    const maxBlow = mostBlow.blow, maxBird = mostBird.bird;
+
+    const fmt = (x) => (x >= 0 ? "+" : "") + x.toFixed(1);
+    const byType = agg.slice().sort((a, b) => (ppl(a.t[3]) + ppl(a.t[4]) + ppl(a.t[5]) < ppl(b.t[3]) + ppl(b.t[4]) + ppl(b.t[5]) ? 1 : -1)).map((a) => {
+      const cells = [3, 4, 5].map((k) => {
+        const b = a.t[k], v = avg(b), p = ppl(b);
+        return {
+          avg: fmt(v), pts: p.toFixed(1),
+          avgColor: v <= 0.35 ? C.turf : v >= 1.3 ? C.flag : C.ink,
+          bg: p >= 2.05 ? "#DCE4D2" : p <= 1.35 ? "#F0DED6" : "transparent"
+        };
+      });
+      let tag = "hcp " + PLAYERS[a.i].hcp, tagColor = C.ink45;
+      if (a.i === bestP5) { tag = "best par 5s"; tagColor = C.turf; }
+      else if (a.i === worstP3) { tag = "worst par 3s"; tagColor = C.flag; }
+      else if (a.i === bestP3) { tag = "best par 3s"; tagColor = C.turf; }
+      return { name: a.name, tag, tagColor, cells };
+    });
+
+    // group hardest / easiest of all 72 holes
+    const holeStats = [];
+    COURSES.forEach((c, ri) => {
+      for (let h = 0; h < 18; h++) {
+        let over = 0;
+        PLAYERS.forEach((p, i) => { over += trip[ri][i].gross[h] - c.par[h]; });
+        holeStats.push({ ri, h, course: c.short, par: c.par[h], si: c.si[h], over: over / PLAYERS.length });
+      }
+    });
+    const byHard = holeStats.slice().sort((a, b) => b.over - a.over);
+    byHard.forEach((x, k) => { x.rank = k + 1; });
+    const siRank = holeStats.slice().sort((a, b) => a.si - b.si || a.ri - b.ri);
+    siRank.forEach((x, k) => { x.siRank = k + 1; });
+    const mk = (x) => {
+      const d = x.siRank - x.rank;
+      return {
+        label: "Hole " + (x.h + 1) + " · par " + x.par, course: x.course,
+        avg: (x.over >= 0 ? "+" : "") + x.over.toFixed(2), si: x.si,
+        delta: (d > 0 ? "+" : "") + d,
+        dColor: Math.abs(d) >= 20 ? C.flag : "#7E8471"
+      };
+    };
+    const holeGroups = [
+      { title: "Hardest three", color: C.flag, holes: byHard.slice(0, 3).map(mk) },
+      { title: "Easiest three", color: C.turf, holes: byHard.slice(-3).reverse().map(mk) }
+    ];
+
+    const counts = agg.slice().sort((a, b) => b.bird - a.bird).map((a) => ({
+      name: a.name, birdies: a.bird, pars: a.pars, bogeys: a.bog, blowups: a.blow,
+      birdColor: a.bird === maxBird ? C.turf : C.ink,
+      blowColor: a.blow === maxBlow ? C.flag : C.ink70
+    }));
+
+    let bestSingle = { v: -1 };
+    totals.forEach((t) => t.perRound.forEach((v, ri) => { if (v > bestSingle.v) bestSingle = { v, name: t.pl.name, ri }; }));
+    // spread the honours: on a near-tie (within 1), prefer someone not already honoured
+    const taken = {};
+    const pick = (ranked, val) => {
+      const top = val(ranked[0]);
+      const alt = ranked.find((x) => !taken[x.name === undefined ? x.pl.name : x.name] && top - val(x) <= 1);
+      const w = alt || ranked[0];
+      taken[w.name === undefined ? w.pl.name : w.name] = true;
+      return w;
+    };
+    const roundBests = [];
+    totals.forEach((t) => t.perRound.forEach((v, ri) => roundBests.push({ name: t.pl.name, v, ri })));
+    roundBests.sort((a, b) => b.v - a.v);
+    const wRound = pick(roundBests, (x) => x.v);
+    const wStreak = pick(agg.slice().sort((a, b) => b.bestStreak - a.bestStreak), (x) => x.bestStreak);
+    const wBlow = pick(agg.slice().sort((a, b) => b.blow - a.blow), (x) => x.blow);
+    const wBird = pick(agg.slice().sort((a, b) => b.bird - a.bird), (x) => x.bird);
+    const supers = [
+      { label: "Most points, one round", name: wRound.name, value: wRound.v, note: "Round " + (wRound.ri + 1) + " · " + COURSES[wRound.ri].short },
+      { label: "Longest streak with points", name: wStreak.name, value: wStreak.bestStreak, note: "consecutive holes" },
+      { label: "Most blow-ups", name: wBlow.name, value: wBlow.blow, note: "double bogey or worse" },
+      { label: "Most birdies", name: wBird.name, value: wBird.bird, note: "gross" }
+    ];
+
+    const swatches = [
+      { name: "--paper", hex: "#F5F0E3" }, { name: "--paper-2", hex: "#EBE4D2" },
+      { name: "--paper-3", hex: "#DFD6BF" }, { name: "--rule", hex: "#D3C8AE" },
+      { name: "--rule-strong", hex: "#B9AC8C" }, { name: "--ink-25", hex: "#AEB29E" },
+      { name: "--ink-45", hex: "#7E8471" }, { name: "--ink-70", hex: "#4C5241" },
+      { name: "--ink", hex: "#1E2318" }, { name: "--turf", hex: "#2E4A31" },
+      { name: "--turf-deep", hex: "#1F3323" }, { name: "--fescue", hex: "#A79556" },
+      { name: "--sand", hex: "#D9BA83" }, { name: "--flag", hex: "#AE4326" }
+    ];
+
+    const tokensCss = [
+      ":root {",
+      "  /* color — paper, ink, turf, sand */",
+      "  --paper:#F5F0E3;  --paper-2:#EBE4D2;  --paper-3:#DFD6BF;",
+      "  --ink:#1E2318;    --ink-70:#4C5241;   --ink-45:#7E8471;  --ink-25:#AEB29E;",
+      "  --rule:#D3C8AE;   --rule-strong:#B9AC8C;",
+      "  --turf:#2E4A31;   --turf-deep:#1F3323;",
+      "  --fescue:#A79556; --sand:#D9BA83;     --flag:#AE4326;    --water:#4A6C79;",
+      "",
+      "  /* semantic */",
+      "  --bg:var(--paper);          --bg-raised:var(--paper-2);",
+      "  --leader-bg:var(--turf-deep); --leader-fg:var(--paper);",
+      "  --accent:var(--sand);       --alert:var(--flag);",
+      "  --pts-good:var(--turf);     --pts-blob:var(--flag);",
+      "",
+      "  /* type */",
+      "  --font-display:'Newsreader',Georgia,serif;   /* names, voice */",
+      "  --font-ui:'Archivo',system-ui,sans-serif;    /* labels, nav */",
+      "  --font-num:'IBM Plex Mono',monospace;        /* all figures */",
+      "  --fs-display:34px; --fs-h1:24px;  --fs-h2:18px;  --fs-body:15px;",
+      "  --fs-num-xl:40px;  --fs-num-l:26px; --fs-num-m:17px;",
+      "  --fs-micro:11px;   --fs-nano:9px;",
+      "  --ls-label:.14em;  --lh-tight:1.05; --lh-body:1.45;",
+      "  --fw-reg:400; --fw-med:500; --fw-bold:700;",
+      "  font-variant-numeric:tabular-nums;",
+      "",
+      "  /* space — 4px base */",
+      "  --sp-1:4px;  --sp-2:8px;  --sp-3:12px; --sp-4:16px;",
+      "  --sp-5:24px; --sp-6:32px; --sp-7:48px;",
+      "  --gutter:18px;      /* phone side margin */",
+      "  --row-h:52px;       /* leaderboard row */",
+      "  --hit-min:44px;     /* min tap target */",
+      "  --key-h:56px;       /* keypad key */",
+      "",
+      "  /* shape */",
+      "  --r-sm:3px; --r-md:6px; --r-lg:10px;",
+      "  --border-hair:1px solid var(--rule);",
+      "  --border-strong:1.5px solid var(--ink);",
+      "  --shadow-card:0 18px 40px rgba(30,35,24,.28);",
+      "}"
+    ].join("\n");
+
+    return { rows, courses, entry, byType, holeGroups, counts, supers, swatches, tokensCss };
+  }
+}
+
+</script>
+</body>
+</html>
