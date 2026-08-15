@@ -1,0 +1,81 @@
+import type { HoleDifficulty } from '../../lib/stats';
+import { SECTION_LETTER, signed } from './format';
+
+function Group({
+  title,
+  tone,
+  holes,
+  highlight,
+}: {
+  title: string;
+  tone: 'hard' | 'easy';
+  holes: readonly HoleDifficulty[];
+  highlight: number;
+}) {
+  const colour = tone === 'hard' ? 'text-flag' : 'text-turf';
+  return (
+    <div>
+      <div
+        className={`pb-1 font-ui text-nano font-bold uppercase tracking-label ${colour}`}
+      >
+        {title}
+      </div>
+      {holes.map((hole) => (
+        <div
+          key={`${hole.roundId}:${hole.hole}`}
+          className="grid grid-cols-difficulty items-center gap-2 border-t border-paper-3 py-2"
+        >
+          <div className="min-w-0">
+            <div className="truncate font-display text-list leading-name text-ink">
+              Hole {hole.hole} · par {hole.par}
+            </div>
+            <div className="truncate font-ui text-pico font-semibold uppercase tracking-caption text-ink-45">
+              {hole.courseName}
+            </div>
+          </div>
+          <div className={`text-right font-num text-list font-semibold ${colour}`}>
+            {signed(hole.averageVsPar, 2)}
+          </div>
+          <div className="text-right font-num text-micro text-ink-70">SI {hole.si}</div>
+          <div
+            className={`text-right font-num text-micro ${
+              Math.abs(hole.delta) >= highlight ? 'text-flag' : 'text-ink-45'
+            }`}
+          >
+            {signed(hole.delta, 0)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function HoleDifficultySection({
+  hardest,
+  easiest,
+  holesRanked,
+  deltaHighlight,
+}: {
+  hardest: readonly HoleDifficulty[];
+  easiest: readonly HoleDifficulty[];
+  holesRanked: number;
+  deltaHighlight: number;
+}) {
+  return (
+    <section className="mt-3 border-y border-rule-strong bg-paper-2 px-gutter py-4">
+      <div className="flex items-baseline gap-2 pb-3">
+        <span className={SECTION_LETTER}>B</span>
+        <h2 className="font-display text-section text-ink">Hardest &amp; easiest holes</h2>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <Group title="Hardest three" tone="hard" holes={hardest} highlight={deltaHighlight} />
+        <Group title="Easiest three" tone="easy" holes={easiest} highlight={deltaHighlight} />
+      </div>
+
+      <p className="pt-2 font-num text-nano leading-body text-ink-45">
+        Δ = printed SI rank minus our actual rank (1 = hardest of {holesRanked})
+      </p>
+    </section>
+  );
+}

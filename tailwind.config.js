@@ -71,6 +71,7 @@ export default {
       page: 'var(--fs-page)',
       display: 'var(--fs-display)',
       'num-xl': 'var(--fs-num-xl)',
+      super: 'var(--fs-super)',
       'num-hero': 'var(--fs-num-hero)',
     },
     lineHeight: {
@@ -137,6 +138,13 @@ export default {
         // Score entry: hole | par/si | gross | net | points
         'card-row':
           'var(--cell-col) 1fr var(--cell-col) var(--cell-col) var(--cell-col)',
+        // Stats A: player | par 3 | par 4 | par 5
+        'hole-type': '1fr var(--type-col) var(--type-col) var(--type-col)',
+        // Stats B: hole | average | stroke index | delta
+        'difficulty': '1fr var(--pts-col) var(--blow-col) var(--hit-min)',
+        // Stats C: player | birdies | pars | bogeys | blow-ups
+        'counts':
+          '1fr var(--cell-col) var(--cell-col) var(--cell-col) var(--blow-col)',
       },
     },
   },

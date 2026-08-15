@@ -84,6 +84,7 @@
   --fs-cell:12px;          /* score-entry card row figures */
   --fs-strip:13px;         /* score on the 18-hole strip */
   --fs-entry-name:25px;    /* player name in the score-entry header */
+  --fs-super:32px;         /* superlative figure on the stats screen */
 
   /* Letter-spacing and line-height steps the screens use beyond --ls-label. */
 
@@ -105,6 +106,8 @@
   --pts-col:46px;          /* leaderboard points column */
   --chip-w:16px;           /* single round chip */
   --cell-col:34px;         /* score-entry card row column */
+  --type-col:52px;         /* stats: par 3 / par 4 / par 5 column */
+  --blow-col:40px;         /* stats: blow-up count, hole-difficulty delta */
   --gap-hair:2px;          /* hole strip gap */
   --gap-chip:3px;          /* round chip gap */
 }

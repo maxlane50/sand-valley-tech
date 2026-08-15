@@ -12,7 +12,7 @@ const TABS = [
   { label: 'Board', to: '/', ready: true },
   { label: 'Rounds', to: '/rounds', ready: true },
   { label: 'Enter', to: '/enter', ready: true },
-  { label: 'Stats', to: '/stats', ready: false },
+  { label: 'Stats', to: '/stats', ready: true },
 ] as const;
 
 export function BottomNav() {
