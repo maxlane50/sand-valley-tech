@@ -1,7 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { runPost } from './_lib/adapter';
-import { saveCard } from './_lib/handlers';
+// See the note in verify-pin.ts: .js specifiers are required under Node ESM.
+import { runPost } from './_lib/adapter.js';
+import { saveCard } from './_lib/handlers.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   await runPost(req, res, saveCard);

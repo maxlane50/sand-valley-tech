@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import type { ApiResult } from './handlers';
+import type { ApiResult } from './handlers.js';
 
 /**
  * Shared plumbing between the Vercel handlers and the local dev middleware:
