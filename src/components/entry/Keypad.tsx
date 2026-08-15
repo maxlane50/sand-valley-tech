@@ -14,6 +14,9 @@ function relativeToPar(value: number, par: number): string {
  * There is no "no score" key: every player holes out, so cards are entered
  * complete. The NULL path stays live in the scoring module and schema as the
  * fallback if someone ever takes an X.
+ *
+ * The grid fills whatever height is left over, so on a taller phone the keys
+ * simply get bigger — this is the screen where 126 numbers get typed.
  */
 export function Keypad({
   activePar,
@@ -29,10 +32,12 @@ export function Keypad({
   onBackspace: () => void;
 }) {
   const keyClass =
-    'flex h-key-h min-h-hit-min flex-col items-center justify-center rounded-md border border-key-border active:translate-y-px';
+    'flex h-full min-h-key-h flex-col items-center justify-center rounded-md border border-key-border active:translate-y-px';
 
   return (
-    <div className="grid grid-cols-3 gap-2 px-3 pt-2">
+    // min-h-0 lets the keypad absorb the squeeze on a very short viewport, so
+    // Save stays reachable rather than being pushed off the bottom.
+    <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-4 gap-2 overflow-hidden px-3 pt-2">
       {DIGITS.map((digit) => {
         const isPar = digit === activePar;
         return (

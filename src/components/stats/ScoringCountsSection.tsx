@@ -109,9 +109,6 @@ export function ScoringCountsSection({
         ))}
       </div>
 
-      <p className="pt-2 font-num text-nano leading-body text-ink-45">
-        gross vs par · eagle = two under or better · blow = double bogey or worse
-      </p>
     </section>
   );
 }

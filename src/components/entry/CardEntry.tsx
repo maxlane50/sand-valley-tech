@@ -9,8 +9,20 @@ import {
 } from '../../lib/entryCard';
 import { saveCard } from '../../lib/entryClient';
 import type { PlayerRecord, RoundRecord } from '../../lib/types';
+import { HOLES_PER_ROUND } from '../../scoring/scoring';
 import type { Course } from '../../scoring/types';
 import { Keypad } from './Keypad';
+import { PlayerChips } from './PlayerChips';
+
+/**
+ * Score entry is an input surface, not a review surface.
+ *
+ * It used to show the same card three ways at once — the 18-hole strip, a
+ * scrolling hole-by-hole list, and a large active-hole readout. The Rounds tab
+ * now does review properly, so all that is gone. What is left is the strip
+ * (progress, and tap to jump), one line of context for the hole you are on,
+ * and a keypad that takes whatever height is left over.
+ */
 
 type SaveState =
   | { phase: 'entering'; error: string | null }
@@ -34,65 +46,50 @@ function HoleStrip({
   onSelect: (index: number) => void;
 }) {
   return (
-    <div className="flex-none border-b border-rule-strong bg-paper-2 px-3 pt-2 pb-3">
-      <div className="flex justify-between px-px pb-2 font-ui text-pico font-bold uppercase tracking-label-2 text-ink-45">
-        <span>Hole</span>
-        <span>● gets a stroke</span>
-      </div>
-      <div className="flex gap-hair">
-        {holes.map((hole, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <button
-              key={hole.hole}
-              type="button"
-              onClick={() => onSelect(index)}
-              aria-label={`Hole ${hole.hole}, par ${hole.par}`}
-              aria-current={isActive}
-              className={`flex flex-1 flex-col items-center rounded-sm py-1 ${
-                isActive
-                  ? 'bg-turf-deep outline outline-strong outline-ink'
-                  : hole.strokes !== null
-                    ? 'bg-paper-shade'
-                    : 'bg-transparent'
+    <div className="flex flex-none gap-hair border-b border-rule-strong bg-paper-2 px-2 py-2">
+      {holes.map((hole, index) => {
+        const isActive = index === activeIndex;
+        return (
+          <button
+            key={hole.hole}
+            type="button"
+            onClick={() => onSelect(index)}
+            aria-label={`Hole ${hole.hole}, par ${hole.par}`}
+            aria-current={isActive}
+            className={`flex flex-1 flex-col items-center rounded-sm py-1 ${
+              isActive
+                ? 'bg-turf-deep outline outline-strong outline-ink'
+                : hole.strokes !== null
+                  ? 'bg-paper-shade'
+                  : 'bg-transparent'
+            }`}
+          >
+            <span
+              className={`font-num text-pico leading-none ${
+                isActive ? 'text-fescue' : 'text-ink-45'
               }`}
             >
-              <span
-                className={`font-num text-pico leading-none ${
-                  isActive ? 'text-fescue' : 'text-ink-45'
-                }`}
-              >
-                {hole.hole}
-              </span>
-              <span
-                className={`py-px font-num text-strip font-semibold leading-name ${
-                  isActive
-                    ? 'text-paper'
-                    : hole.strokes === null
-                      ? 'text-ink-25'
-                      : hole.points === 0
-                        ? 'text-flag'
-                        : 'text-ink'
-                }`}
-              >
-                {hole.strokes ?? '·'}
-              </span>
-              <span
-                className={`font-num text-pico leading-none ${
-                  isActive ? 'text-ink-25' : 'text-rule-strong'
-                }`}
-              >
-                {hole.par}
-              </span>
-              <span
-                className={`text-tiny leading-none ${isActive ? 'text-sand' : 'text-flag'}`}
-              >
-                {strokeMarks(hole.strokesReceived)}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              {hole.hole}
+            </span>
+            <span
+              className={`py-px font-num text-strip font-semibold leading-name ${
+                isActive
+                  ? 'text-paper'
+                  : hole.strokes === null
+                    ? 'text-ink-25'
+                    : hole.points === 0
+                      ? 'text-flag'
+                      : 'text-ink'
+              }`}
+            >
+              {hole.strokes ?? '·'}
+            </span>
+            <span className={`text-tiny leading-none ${isActive ? 'text-sand' : 'text-flag'}`}>
+              {strokeMarks(hole.strokesReceived)}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -103,6 +100,7 @@ export function CardEntry({
   roundNumber,
   player,
   players,
+  entered,
   initialStrokes,
   pin,
   onSelectPlayer,
@@ -115,6 +113,8 @@ export function CardEntry({
   roundNumber: number;
   player: PlayerRecord;
   players: readonly PlayerRecord[];
+  /** Holes already saved per player for this round, for the chip ticks. */
+  entered: ReadonlyMap<number, number>;
   initialStrokes: (number | null)[];
   pin: string;
   onSelectPlayer: (playerId: number) => void;
@@ -135,7 +135,6 @@ export function CardEntry({
   );
 
   const active = card.holes[activeIndex]!;
-  const playerIndex = players.findIndex((p) => p.id === player.id);
 
   /** Writes one hole and leaves the cursor alone. */
   function setHole(index: number, value: number | null) {
@@ -168,9 +167,14 @@ export function CardEntry({
     setActiveIndex(previous);
   }
 
-  function movePlayer(step: number) {
-    const next = players[(playerIndex + step + players.length) % players.length];
-    if (next) onSelectPlayer(next.id);
+  /** The next player round the list whose card isn't in yet. */
+  function nextIncompletePlayer(): number | null {
+    const start = players.findIndex((p) => p.id === player.id);
+    for (let step = 1; step <= players.length; step += 1) {
+      const candidate = players[(start + step) % players.length]!;
+      if ((entered.get(candidate.id) ?? 0) < HOLES_PER_ROUND) return candidate.id;
+    }
+    return null;
   }
 
   async function submit() {
@@ -206,46 +210,26 @@ export function CardEntry({
           return delta === 0 ? 'E' : delta > 0 ? `+${delta}` : String(delta);
         })();
 
+  const nextPlayer = save.phase === 'saved' ? nextIncompletePlayer() : null;
+
   return (
     <>
-      <header className="flex-none bg-turf-deep px-gutter pt-3 pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <button
-              type="button"
-              onClick={onBack}
-              className="font-ui text-nano font-bold uppercase tracking-eyebrow text-fescue"
-            >
-              ◀ R{roundNumber} · {course.name} · PH {card.playingHandicap}
-            </button>
-            <div className="flex items-baseline gap-2 pt-1">
-              <span className="letterpress-dark truncate font-display text-entry-name leading-none text-paper">
-                {player.name}
-              </span>
-              <span className="flex flex-none gap-1">
-                <button
-                  type="button"
-                  onClick={() => movePlayer(-1)}
-                  aria-label="Previous player"
-                  className="font-num text-chip text-ink-25"
-                >
-                  ◀
-                </button>
-                <button
-                  type="button"
-                  onClick={() => movePlayer(1)}
-                  aria-label="Next player"
-                  className="font-num text-chip text-ink-25"
-                >
-                  ▶
-                </button>
-              </span>
-            </div>
-          </div>
+      <header className="flex-none bg-turf-deep px-gutter pt-2 pb-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="font-ui text-nano font-bold uppercase tracking-eyebrow text-fescue"
+        >
+          ◀ R{roundNumber} · {course.name} · PH {card.playingHandicap}
+        </button>
 
-          <div className="flex flex-none gap-4 text-right">
+        <div className="flex items-baseline justify-between gap-3 pt-1">
+          <span className="letterpress-dark min-w-0 truncate font-display text-entry-name leading-none text-paper">
+            {player.name}
+          </span>
+          <div className="flex flex-none items-baseline gap-4 text-right">
             <div>
-              <div className="font-num text-num-l font-semibold leading-none text-paper">
+              <div className="font-num text-num-m font-semibold leading-none text-paper">
                 {card.entered === 0 ? '–' : card.runningGross}
               </div>
               <div className="font-ui text-pico font-bold uppercase tracking-label-3 text-ink-25">
@@ -253,7 +237,7 @@ export function CardEntry({
               </div>
             </div>
             <div>
-              <div className="font-num text-num-l font-semibold leading-none text-sand">
+              <div className="font-num text-num-m font-semibold leading-none text-sand">
                 {card.points}
               </div>
               <div className="font-ui text-pico font-bold uppercase tracking-label-3 text-ink-25">
@@ -264,83 +248,27 @@ export function CardEntry({
         </div>
       </header>
 
+      <PlayerChips
+        players={players}
+        currentId={player.id}
+        entered={entered}
+        onSelect={onSelectPlayer}
+      />
+
       <HoleStrip holes={card.holes} activeIndex={activeIndex} onSelect={setActiveIndex} />
 
-      <div className="flex flex-none flex-col items-center justify-center bg-paper py-4">
-        <div className="whitespace-nowrap font-ui text-chip font-bold uppercase tracking-eyebrow text-ink-45">
-          Hole {active.hole} · par {active.par} · si {active.si}
-          {active.strokesReceived !== 0
-            ? ` · ${active.strokesReceived > 0 ? '+' : ''}${active.strokesReceived}`
-            : ''}
-        </div>
-        <div className="flex items-baseline gap-3">
-          <span className="font-num text-num-hero font-semibold leading-none text-ink">
-            {active.strokes ?? '–'}
+      <div className="flex-none px-gutter py-2 text-center font-ui text-micro font-bold uppercase tracking-label text-ink-45">
+        Hole {active.hole} · Par {active.par} · SI {active.si}
+        {active.strokesReceived !== 0 ? (
+          <span className="text-flag">
+            {' · '}
+            {active.strokesReceived > 0 ? '+' : ''}
+            {active.strokesReceived} stroke
           </span>
-          <span className="font-num text-body text-ink-70">
-            {active.points === null ? '' : `${active.points} pts`}
-          </span>
-        </div>
+        ) : null}
       </div>
 
-      <div className="flex-1 overflow-auto border-t border-rule bg-paper-sunk">
-        <div className="grid grid-cols-card-row gap-1 border-b border-rule px-3 pt-2 pb-1 font-ui text-pico font-bold uppercase tracking-label-3 text-ink-45">
-          <div>Hole</div>
-          <div>Par / SI</div>
-          <div className="text-right">Gr</div>
-          <div className="text-right">Net</div>
-          <div className="text-right">Pts</div>
-        </div>
-        {card.holes
-          .map((hole, index) => ({ hole, index }))
-          .filter(({ hole, index }) => hole.strokes !== null || index === activeIndex)
-          .reverse()
-          .map(({ hole, index }) => (
-            <button
-              key={hole.hole}
-              type="button"
-              onClick={() => setActiveIndex(index)}
-              className={`grid w-full grid-cols-card-row items-center gap-1 border-b border-paper-shade px-3 py-1 text-left ${
-                index === activeIndex ? 'bg-row-active' : ''
-              }`}
-            >
-              <span
-                className={`font-num text-micro ${
-                  index === activeIndex ? 'text-ink' : 'text-ink-45'
-                }`}
-              >
-                {hole.hole}
-              </span>
-              <span className="font-num text-chip text-ink-45">
-                par {hole.par} · si {hole.si}
-                {hole.strokesReceived !== 0
-                  ? ` · ${hole.strokesReceived > 0 ? '+' : ''}${hole.strokesReceived}`
-                  : ''}
-              </span>
-              <span className="text-right font-num text-cell font-semibold text-ink">
-                {hole.strokes ?? '·'}
-              </span>
-              <span className="text-right font-num text-micro text-ink-70">
-                {hole.net ?? '·'}
-              </span>
-              <span
-                className={`text-right font-num text-cell font-semibold ${
-                  hole.points === null
-                    ? 'text-ink-25'
-                    : hole.points === 0
-                      ? 'text-flag'
-                      : hole.points >= 3
-                        ? 'text-turf'
-                        : 'text-ink'
-                }`}
-              >
-                {hole.points ?? '·'}
-              </span>
-            </button>
-          ))}
-      </div>
-
-      <div className="flex-none border-t border-rule-strong bg-paper-2 pb-2">
+      <div className="flex flex-1 flex-col border-t border-rule-strong bg-paper-2 pb-2">
         <Keypad
           activePar={active.par}
           activeValue={active.strokes}
@@ -349,7 +277,7 @@ export function CardEntry({
           onBackspace={onBackspace}
         />
 
-        <div className="flex items-center justify-between gap-3 px-3 pt-2">
+        <div className="flex flex-none items-center justify-between gap-3 px-3 pt-2">
           <button
             type="button"
             onClick={() => {
@@ -363,9 +291,20 @@ export function CardEntry({
           </button>
 
           {save.phase === 'saved' ? (
-            <span className="font-ui text-nano font-bold uppercase tracking-label text-turf">
-              Saved ✓ · {save.grossTotal} gross
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="font-ui text-nano font-bold uppercase tracking-label text-turf">
+                Saved ✓ {save.grossTotal}
+              </span>
+              {nextPlayer !== null ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectPlayer(nextPlayer)}
+                  className="min-h-hit-min rounded-md bg-turf-deep px-4 font-ui text-micro font-bold uppercase tracking-label text-paper"
+                >
+                  Next ▶
+                </button>
+              ) : null}
+            </div>
           ) : (
             <button
               type="button"
@@ -377,7 +316,7 @@ export function CardEntry({
                 ? 'Saving'
                 : card.complete
                   ? 'Save card'
-                  : `${18 - card.entered} holes left`}
+                  : `${HOLES_PER_ROUND - card.entered} left`}
             </button>
           )}
         </div>

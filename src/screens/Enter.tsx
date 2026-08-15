@@ -33,6 +33,17 @@ export function Enter() {
   const [roundId, setRoundId] = useState<number | null>(null);
   const [playerId, setPlayerId] = useState<number | null>(null);
 
+  /** Holes already saved per player for the chosen round. */
+  const entered = useMemo(() => {
+    const counts = new Map<number, number>();
+    if (state.status !== 'ready' || roundId === null) return counts;
+    for (const score of state.data.scores) {
+      if (score.round_id !== roundId) continue;
+      counts.set(score.player_id, (counts.get(score.player_id) ?? 0) + 1);
+    }
+    return counts;
+  }, [state, roundId]);
+
   const selection = useMemo(() => {
     if (state.status !== 'ready' || roundId === null || playerId === null) return null;
 
@@ -120,6 +131,7 @@ export function Enter() {
       roundNumber={selection.roundNumber}
       player={selection.player}
       players={state.data.players}
+      entered={entered}
       initialStrokes={selection.strokes}
       pin={pin}
       onSelectPlayer={setPlayerId}

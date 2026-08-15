@@ -92,9 +92,6 @@ export function ByHoleType({
         ))}
       </div>
 
-      <p className="pt-2 font-num text-nano leading-body text-ink-45">
-        big number = strokes vs par · small = net Stableford pts per hole
-      </p>
     </section>
   );
 }

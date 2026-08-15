@@ -46,11 +46,9 @@ function Group({
 export function HoleDifficultySection({
   hardest,
   easiest,
-  holesRanked,
 }: {
   hardest: readonly HoleDifficulty[];
   easiest: readonly HoleDifficulty[];
-  holesRanked: number;
 }) {
   return (
     <section className="mt-3 border-y border-rule-strong bg-paper-2 px-gutter py-4">
@@ -64,9 +62,6 @@ export function HoleDifficultySection({
         <Group title="Easiest three" tone="easy" holes={easiest} />
       </div>
 
-      <p className="pt-2 font-num text-nano leading-body text-ink-45">
-        group scoring average vs par, over {holesRanked} holes played
-      </p>
     </section>
   );
 }

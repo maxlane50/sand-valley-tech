@@ -109,7 +109,6 @@ export function Stats() {
       <HoleDifficultySection
         hardest={stats.hardest}
         easiest={stats.easiest}
-        holesRanked={stats.holesRanked}
       />
 
       <ScoringCountsSection players={stats.players} group={stats.group} />

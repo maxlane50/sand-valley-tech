@@ -96,8 +96,7 @@ export function Trajectory({
 
       {scoredRounds < 2 ? (
         <p className="font-num text-chip leading-body text-ink-45">
-          One round in. This fills out once a second set of cards is entered —
-          it needs at least two standings to draw a line between.
+          Not enough data — need multiple rounds
         </p>
       ) : (
         <>

@@ -270,9 +270,7 @@ export function RoundDetail() {
             {totalRow('Tot', grid.parTotal, (p) => p.total, true)}
 
             <div className="px-gutter pt-2 pb-4 font-num text-nano leading-body text-ink-45">
-              big figure = gross · small = Stableford points · • = stroke received
-              <br />
-              column heading shows each player&apos;s playing handicap for this round
+              <span className="text-flag">•</span> = handicap stroke
             </div>
 
             {problems.length > 0 ? (
