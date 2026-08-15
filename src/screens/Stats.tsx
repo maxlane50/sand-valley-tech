@@ -73,7 +73,7 @@ export function Stats() {
         <div className="font-ui text-nano font-bold uppercase tracking-eyebrow text-ink-45">
           {TRIP.title} · {stats.group.holesPlayed} holes played
         </div>
-        <h1 className="font-display text-page leading-tight text-ink">Stats</h1>
+        <h1 className="letterpress font-display text-page leading-tight text-ink">Stats</h1>
       </header>
 
       {/* Moved off the leaderboard, which is now standings only. */}

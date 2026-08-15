@@ -56,7 +56,7 @@ export function HoleDifficultySection({
     <section className="mt-3 border-y border-rule-strong bg-paper-2 px-gutter py-4">
       <div className="flex items-baseline gap-2 pb-3">
         <span className={SECTION_LETTER}>B</span>
-        <h2 className="font-display text-section text-ink">Hardest &amp; easiest holes</h2>
+        <h2 className="letterpress font-display text-section text-ink">Hardest &amp; easiest holes</h2>
       </div>
 
       <div className="flex flex-col gap-4">

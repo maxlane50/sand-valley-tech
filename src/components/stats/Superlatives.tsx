@@ -8,7 +8,7 @@ export function Superlatives({ items }: { items: readonly Superlative[] }) {
     <section className="bg-turf-deep px-gutter pt-4 pb-6">
       <div className="flex items-baseline gap-2 pb-3">
         <span className="font-num text-micro text-sand">D</span>
-        <h2 className="font-display text-section text-paper">Superlatives</h2>
+        <h2 className="letterpress-dark font-display text-section text-paper">Superlatives</h2>
       </div>
 
       {items.map((item) => (
@@ -20,7 +20,7 @@ export function Superlatives({ items }: { items: readonly Superlative[] }) {
             <div className="font-ui text-nano font-bold uppercase tracking-label text-fescue">
               {item.label}
             </div>
-            <div className="truncate font-display text-section leading-name text-paper">
+            <div className="letterpress-dark truncate font-display text-section leading-name text-paper">
               {item.name}
             </div>
             <div className="font-num text-chip text-ink-on-turf">{item.note}</div>

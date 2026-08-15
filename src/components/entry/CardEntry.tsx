@@ -219,7 +219,7 @@ export function CardEntry({
               ◀ R{roundNumber} · {course.name} · PH {card.playingHandicap}
             </button>
             <div className="flex items-baseline gap-2 pt-1">
-              <span className="truncate font-display text-entry-name leading-none text-paper">
+              <span className="letterpress-dark truncate font-display text-entry-name leading-none text-paper">
                 {player.name}
               </span>
               <span className="flex flex-none gap-1">

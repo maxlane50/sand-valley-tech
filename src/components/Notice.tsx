@@ -23,7 +23,7 @@ export function Notice({
           {eyebrow}
         </div>
       ) : null}
-      <div className="pt-1 font-display text-h2 leading-name text-ink">{title}</div>
+      <div className="letterpress pt-1 font-display text-h2 leading-name text-ink">{title}</div>
       {children ? (
         <div className="pt-2 font-num text-chip leading-body text-ink-70">{children}</div>
       ) : null}

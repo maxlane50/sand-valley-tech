@@ -34,7 +34,7 @@ export function ByHoleType({
     <section className="px-gutter pt-4 pb-2">
       <div className="flex items-baseline gap-2 pb-3">
         <span className={SECTION_LETTER}>A</span>
-        <h2 className="font-display text-section text-ink">By hole type</h2>
+        <h2 className="letterpress font-display text-section text-ink">By hole type</h2>
       </div>
 
       <div className="grid grid-cols-hole-type gap-2 border-b-strong border-ink pb-1 font-ui text-nano font-bold uppercase tracking-label-3 text-ink-45">

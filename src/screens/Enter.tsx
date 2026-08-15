@@ -28,7 +28,7 @@ function existingCard(
 }
 
 export function Enter() {
-  const { state, reload } = useTrip();
+  const { state, refresh } = useTrip();
   const [pin, setPin] = useState<string | null>(() => loadPin());
   const [roundId, setRoundId] = useState<number | null>(null);
   const [playerId, setPlayerId] = useState<number | null>(null);
@@ -124,7 +124,9 @@ export function Enter() {
       pin={pin}
       onSelectPlayer={setPlayerId}
       onBack={() => setPlayerId(null)}
-      onSaved={reload}
+      // Silent, so saving a card doesn't flash the entry screen back to a
+      // loading state while the keypad is still open.
+      onSaved={refresh}
       onPinRejected={() => {
         clearPin();
         setPin(null);

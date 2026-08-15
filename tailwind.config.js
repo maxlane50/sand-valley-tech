@@ -120,7 +120,8 @@ export default {
     },
     borderWidth: {
       0: '0px',
-      DEFAULT: '1px',
+      // Halves to 0.5px on retina — see --hairline in tokens.css.
+      DEFAULT: 'var(--hairline)',
       strong: '1.5px',
       2: '2px',
     },

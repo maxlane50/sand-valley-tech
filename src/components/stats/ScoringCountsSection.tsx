@@ -57,7 +57,7 @@ export function ScoringCountsSection({
     <section className="px-gutter pt-4 pb-2">
       <div className="flex items-baseline gap-2 pb-3">
         <span className={SECTION_LETTER}>C</span>
-        <h2 className="font-display text-section text-ink">Scoring counts</h2>
+        <h2 className="letterpress font-display text-section text-ink">Scoring counts</h2>
       </div>
 
       <div className="grid grid-cols-counts gap-1 border-b-strong border-ink pb-1 font-ui text-nano font-bold uppercase tracking-nav text-ink-45">

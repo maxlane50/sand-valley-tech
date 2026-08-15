@@ -11,4 +11,26 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* Letterpress. Only for display type — below about 14px the rim just reads
+     as blur. `.letterpress-dark` is for paper-on-ink blocks. */
+  .letterpress {
+    text-shadow: var(--letterpress);
+  }
+
+  .letterpress-dark {
+    text-shadow: var(--letterpress-dark);
+  }
+}
+
+/* Anyone who has asked for less motion gets none of it. The FLIP and count-up
+   hooks check the same query in JS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

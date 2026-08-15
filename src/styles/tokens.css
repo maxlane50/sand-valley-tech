@@ -110,6 +110,36 @@
   --blow-col:40px;         /* stats: blow-up count, hole-difficulty delta */
   --gap-hair:2px;          /* hole strip gap */
   --gap-chip:3px;          /* round chip gap */
+
+  /* ─── Part 3 · craft ──────────────────────────────────────────────────── */
+  /* Not from design.html. Added deliberately to make the printed-scorecard
+     idea physical: paper tooth, ink pressed into stock, engraved rules.     */
+
+  /* Rules. 1px is a full device pixel on a 1x screen; on retina we halve it
+     so hairlines read as engraved rather than drawn. Overridden below. */
+  --hairline:1px;
+
+  /* Ink pressed into paper leaves a light rim on the lower edge. Inverted on
+     the dark blocks, where the deboss reads as a shadow instead. */
+  --letterpress:0 1px 0 rgba(255, 252, 242, 0.55);
+  --letterpress-dark:0 1px 0 rgba(0, 0, 0, 0.32);
+
+  /* Paper tooth. Fractal noise, tiled, sitting over everything at very low
+     opacity — imperceptible as a pattern, visible as texture. */
+  --grain-opacity:0.045;
+  --grain-size:180px;
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+
+  /* Motion. Long enough to read as deliberate, short enough not to be waited on. */
+  --ease-settle:cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-reorder:520ms;
+  --dur-count:700ms;
+}
+
+@media (min-resolution: 2dppx) {
+  :root {
+    --hairline:0.5px;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -139,4 +169,23 @@ a {
 
 a:hover {
   color: var(--flag);
+}
+
+/* Paper tooth over the whole sheet, including the dark blocks — it is one
+   stock, not two. Fixed and inert so it never intercepts a tap. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: var(--grain);
+  background-size: var(--grain-size) var(--grain-size);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body::after {
+    display: none;
+  }
 }

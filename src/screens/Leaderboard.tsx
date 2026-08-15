@@ -4,6 +4,7 @@ import { Notice } from '../components/Notice';
 import { TRIP } from '../config/trip';
 import { getCourse } from '../data/courses';
 import { buildLeaderboard, type LeaderRow, type Movement } from '../lib/leaderboard';
+import { useCountUp, useFlipReorder } from '../hooks/useMotion';
 import { useTrip } from '../hooks/useTrip';
 
 const MOVEMENT: Record<Movement, { glyph: string; className: string }> = {
@@ -13,26 +14,42 @@ const MOVEMENT: Record<Movement, { glyph: string; className: string }> = {
   same: { glyph: '–', className: 'text-ink-25' },
 };
 
-/** Title only. The round/holes readout and the rounds list live on Stats. */
+/**
+ * Title only — the round readout and the rounds list live on Stats.
+ *
+ * The "presented by" line is set in Newsreader italic, as design.html's canvas
+ * masthead has it. The phone mock used uppercase Archivo there; the serif reads
+ * as a nameplate rather than a label, and the italic is already being loaded.
+ */
 function Header() {
   return (
     <header className="flex-none border-b-strong border-ink bg-paper-2 px-gutter pt-4 pb-3">
-      <div className="font-display text-card-title leading-tight text-ink">
+      <div className="letterpress font-display text-card-title leading-tight text-ink">
         {TRIP.title}
       </div>
-      <div className="font-ui text-pico font-semibold uppercase tracking-label-3 text-ink-45">
+      <div className="font-display text-list italic leading-name text-ink-70">
         {TRIP.presentedBy}
       </div>
     </header>
   );
 }
 
-function Row({ row, index }: { row: LeaderRow; index: number }) {
+function Row({
+  row,
+  index,
+  innerRef,
+}: {
+  row: LeaderRow;
+  index: number;
+  innerRef: (element: HTMLElement | null) => void;
+}) {
   const { isLeader } = row;
   const move = MOVEMENT[row.movement];
+  const points = useCountUp(row.totalPoints);
 
   return (
     <div
+      ref={innerRef}
       className={[
         'grid min-h-row-h flex-1 grid-cols-board items-center gap-2 border-b border-rule-soft px-gutter',
         // Striping is driven by row index, not :nth-child — the scroll
@@ -61,7 +78,9 @@ function Row({ row, index }: { row: LeaderRow; index: number }) {
         <div
           className={[
             'truncate font-display leading-name',
-            isLeader ? 'text-name-lead text-paper' : 'text-name text-ink',
+            isLeader
+              ? 'letterpress-dark text-name-lead text-paper'
+              : 'letterpress text-name text-ink',
           ].join(' ')}
         >
           {row.name}
@@ -100,7 +119,7 @@ function Row({ row, index }: { row: LeaderRow; index: number }) {
             isLeader ? 'text-pts-lead text-paper' : 'text-pts text-ink',
           ].join(' ')}
         >
-          {row.totalPoints}
+          {points}
         </span>
         <span
           className={`font-num text-chip leading-none ${
@@ -116,6 +135,7 @@ function Row({ row, index }: { row: LeaderRow; index: number }) {
 
 export function Leaderboard() {
   const { state } = useTrip();
+  const registerRow = useFlipReorder<number>();
 
   const board = useMemo(() => {
     if (state.status !== 'ready') return null;
@@ -180,7 +200,12 @@ export function Leaderboard() {
       {/* Rows share the leftover height so the board fills the page. */}
       <div className="flex flex-1 flex-col overflow-auto bg-paper">
         {board.rows.map((row, index) => (
-          <Row key={row.playerId} row={row} index={index} />
+          <Row
+            key={row.playerId}
+            row={row}
+            index={index}
+            innerRef={registerRow(row.playerId)}
+          />
         ))}
 
         {board.problems.length > 0 ? (

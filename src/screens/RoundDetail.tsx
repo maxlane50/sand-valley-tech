@@ -199,7 +199,9 @@ export function RoundDetail() {
   return (
     <>
       <header className="flex-none border-b border-rule bg-paper-2 px-gutter pt-3 pb-2">
-        <div className="font-display text-h2 leading-tight text-ink">{grid.courseName}</div>
+        <div className="letterpress font-display text-h2 leading-tight text-ink">
+          {grid.courseName}
+        </div>
         <div className="font-num text-chip text-ink-45">
           {grid.teeName} · par {grid.parTotal || '–'} · {grid.date}
         </div>

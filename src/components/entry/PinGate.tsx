@@ -31,7 +31,7 @@ export function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
       <div className="font-ui text-nano font-bold uppercase tracking-eyebrow text-fescue">
         {TRIP.title} · score entry
       </div>
-      <div className="pt-1 font-display text-page leading-tight text-paper">Locked</div>
+      <div className="letterpress-dark pt-1 font-display text-page leading-tight text-paper">Locked</div>
       <p className="pt-2 font-num text-chip leading-body text-ink-on-turf">
         Everyone can read the board. Only this screen needs the PIN.
       </p>
