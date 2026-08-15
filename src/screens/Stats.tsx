@@ -70,7 +70,7 @@ export function Stats() {
 
   return (
     <div className="flex-1 overflow-auto bg-paper">
-      <header className="border-b-strong border-ink bg-paper-2 px-gutter pt-4 pb-3">
+      <header className="border-b-strong border-ink bg-paper-2 px-gutter pt-3 pb-2">
         <div className="font-ui text-nano font-bold uppercase tracking-eyebrow text-ink-45">
           {TRIP.title} · {stats.group.holesPlayed} holes played
         </div>

@@ -23,7 +23,7 @@ const MOVEMENT: Record<Movement, { glyph: string; className: string }> = {
  */
 function Header() {
   return (
-    <header className="flex-none border-b-strong border-ink bg-paper-2 px-gutter pt-4 pb-3">
+    <header className="flex-none border-b-strong border-ink bg-paper-2 px-gutter pt-3 pb-2">
       <div className="letterpress font-display text-card-title leading-tight text-ink">
         {TRIP.title}
       </div>

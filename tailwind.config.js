@@ -107,6 +107,7 @@ export default {
       'chip-w': 'var(--chip-w)',
       'cell-col': 'var(--cell-col)',
       'spark-h': 'var(--spark-h)',
+      app: 'var(--app-h)',
       'pos-col': 'var(--pos-col)',
       'pts-col': 'var(--pts-col)',
       'rounds-col': 'var(--rounds-col)',

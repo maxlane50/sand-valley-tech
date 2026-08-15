@@ -101,6 +101,12 @@
   /* Layout constants the screens pin exactly. */
 
   --w-phone:390px;         /* design.html draws every screen at 390px */
+
+  /* App height. 100vh on iOS Safari is the *large* viewport — the height with
+     the URL bar retracted — so a 100vh column runs under the toolbar and the
+     bottom nav can't be tapped until you scroll. 100dvh tracks the height
+     that is actually visible right now. Fallback below for anything older. */
+  --app-h:100vh;
   --pos-col:26px;          /* leaderboard position column */
   --rounds-col:76px;       /* leaderboard round-chips column */
   --pts-col:46px;          /* leaderboard points column */
@@ -143,6 +149,12 @@
 @media (min-resolution: 2dppx) {
   :root {
     --hairline:0.5px;
+  }
+}
+
+@supports (height: 100dvh) {
+  :root {
+    --app-h:100dvh;
   }
 }
 
