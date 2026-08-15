@@ -38,25 +38,23 @@ export function Keypad({
     // min-h-0 lets the keypad absorb the squeeze on a very short viewport, so
     // Save stays reachable rather than being pushed off the bottom.
     <div className="grid min-h-0 flex-1 grid-cols-3 grid-rows-4 gap-2 overflow-hidden px-3 pt-2">
-      {DIGITS.map((digit) => {
-        const isPar = digit === activePar;
-        return (
-          <button
-            key={digit}
-            type="button"
-            onClick={() => onDigit(digit)}
-            aria-label={`Score ${digit}, ${relativeToPar(digit, activePar)}`}
-            className={`${keyClass} ${
-              isPar ? 'border-turf-deep bg-turf-deep text-paper' : 'bg-paper text-ink'
-            }`}
-          >
-            <span className="font-num text-pts font-semibold leading-none">{digit}</span>
-            <span className="pt-px font-ui text-pico font-bold uppercase tracking-nav opacity-60">
-              {relativeToPar(digit, activePar)}
-            </span>
-          </button>
-        );
-      })}
+      {/* Every digit key looks the same. The par key used to be filled turf,
+          which read as "this is selected" rather than "this is par" — the
+          relative label underneath already says it. */}
+      {DIGITS.map((digit) => (
+        <button
+          key={digit}
+          type="button"
+          onClick={() => onDigit(digit)}
+          aria-label={`Score ${digit}, ${relativeToPar(digit, activePar)}`}
+          className={`${keyClass} bg-paper text-ink`}
+        >
+          <span className="font-num text-pts font-semibold leading-none">{digit}</span>
+          <span className="pt-px font-ui text-pico font-bold uppercase tracking-nav opacity-60">
+            {relativeToPar(digit, activePar)}
+          </span>
+        </button>
+      ))}
 
       <button
         type="button"
