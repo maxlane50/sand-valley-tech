@@ -72,8 +72,13 @@ export function ByHoleType({
       ))}
 
       {/* Group row is not in design.html — added because the brief asks for
-          these figures "per player and group-wide". */}
-      <div className="grid grid-cols-hole-type items-center gap-2 border-y-strong border-ink bg-paper-2 py-2">
+          these figures "per player and group-wide".
+
+          It is the only row here with a background, so it bleeds to the screen
+          edges and pads its content back in by the same gutter. That keeps the
+          columns aligned with the rows above while giving the band breathing
+          room, and matches the full-width OUT/IN/TOT bands on round detail. */}
+      <div className="-mx-gutter grid grid-cols-hole-type items-center gap-2 border-y-strong border-ink bg-paper-2 px-gutter py-2">
         <div className="min-w-0">
           <div className="font-ui text-micro font-bold uppercase tracking-label text-ink">
             Group

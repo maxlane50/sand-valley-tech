@@ -90,8 +90,10 @@ export function ScoringCountsSection({
         </div>
       ))}
 
-      {/* Group totals — the brief asks for these counts group-wide too. */}
-      <div className="grid grid-cols-counts items-center gap-1 border-y-strong border-ink bg-paper-2 py-2">
+      {/* Group totals — the brief asks for these counts group-wide too.
+          Full-bleed band with the gutter padded back in, so the blow-up figure
+          is not flush against the edge of its own background. */}
+      <div className="-mx-gutter grid grid-cols-counts items-center gap-1 border-y-strong border-ink bg-paper-2 px-gutter py-2">
         <span className="font-ui text-micro font-bold uppercase tracking-label text-ink">
           Group
         </span>
