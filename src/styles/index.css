@@ -1,0 +1,14 @@
+/* Tokens must load before Tailwind's utilities so the custom properties exist
+   by the time any utility resolves them. */
+@import './tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Bottom nav has to clear the iPhone home indicator. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

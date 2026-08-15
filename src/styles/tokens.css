@@ -1,0 +1,139 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Design tokens — the single source of truth for colour, type and spacing.
+
+   Part 1 is the designer's `tokensCss` hand-off block from
+   src/design/design.html (line 649), transcribed verbatim.
+
+   Part 2 is values the design's screens actually use that never made it into
+   that block. They are read off design.html, not invented. If you need a value
+   that is not in this file, ask the designer — do not add a raw hex, px size or
+   font stack anywhere else in the codebase.
+
+   Nothing here uses a Tailwind default colour, font or type step.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── Part 1 · designer's token block ─────────────────────────────────── */
+
+  /* color — paper, ink, turf, sand */
+  --paper:#F5F0E3;  --paper-2:#EBE4D2;  --paper-3:#DFD6BF;
+  --ink:#1E2318;    --ink-70:#4C5241;   --ink-45:#7E8471;  --ink-25:#AEB29E;
+  --rule:#D3C8AE;   --rule-strong:#B9AC8C;
+  --turf:#2E4A31;   --turf-deep:#1F3323;
+  --fescue:#A79556; --sand:#D9BA83;     --flag:#AE4326;    --water:#4A6C79;
+
+  /* semantic */
+  --bg:var(--paper);          --bg-raised:var(--paper-2);
+  --leader-bg:var(--turf-deep); --leader-fg:var(--paper);
+  --accent:var(--sand);       --alert:var(--flag);
+  --pts-good:var(--turf);     --pts-blob:var(--flag);
+
+  /* type */
+  --font-display:'Newsreader',Georgia,serif;   /* names, voice */
+  --font-ui:'Archivo',system-ui,sans-serif;    /* labels, nav */
+  --font-num:'IBM Plex Mono',monospace;        /* all figures */
+  --fs-display:34px; --fs-h1:24px;  --fs-h2:18px;  --fs-body:15px;
+  --fs-num-xl:40px;  --fs-num-l:26px; --fs-num-m:17px;
+  --fs-micro:11px;   --fs-nano:9px;
+  --ls-label:.14em;  --lh-tight:1.05; --lh-body:1.45;
+  --fw-reg:400; --fw-med:500; --fw-bold:700;
+  font-variant-numeric:tabular-nums;
+
+  /* space — 4px base */
+  --sp-1:4px;  --sp-2:8px;  --sp-3:12px; --sp-4:16px;
+  --sp-5:24px; --sp-6:32px; --sp-7:48px;
+  --gutter:18px;      /* phone side margin */
+  --row-h:52px;       /* leaderboard row */
+  --hit-min:44px;     /* min tap target */
+  --key-h:56px;       /* keypad key */
+
+  /* shape */
+  --r-sm:3px; --r-md:6px; --r-lg:10px;
+  --border-hair:1px solid var(--rule);
+  --border-strong:1.5px solid var(--ink);
+  --shadow-card:0 18px 40px rgba(30,35,24,.28);
+
+  /* ─── Part 2 · extracted from the design.html screens ─────────────────── */
+  /* Colours the screens use that the token block above omits.               */
+
+  --row-alt:#F1EBDD;       /* odd leaderboard row */
+  --leader-chip:#33502F;   /* round chip on the leader row; superlative rule */
+  --rule-soft:#E0D8C3;     /* row divider, leaderboard + stats */
+  --paper-shade:#E2DAC5;   /* filled hole cell; score-entry row divider */
+  --paper-sunk:#EFE9DA;    /* score-entry scrolling card area */
+  --row-active:#E4DCC6;    /* active hole row in score entry */
+  --key-border:#C6BAA0;    /* keypad key border */
+  --tint-good:#DCE4D2;     /* stats cell, scoring well */
+  --tint-bad:#F0DED6;      /* stats cell, scoring badly */
+  --ink-on-turf:#9FAE96;   /* muted note text on --turf-deep */
+
+  /* Type steps the screens use that the scale above omits. */
+
+  --fs-pico:8px;           /* sub-labels under a heading */
+  --fs-tiny:7px;           /* stroke dot on the hole strip */
+  --fs-chip:10px;          /* round chips, points-back, nav */
+  --fs-list:14px;          /* course list, hole list */
+  --fs-name:17px;          /* player name, standard row */
+  --fs-name-lead:22px;     /* player name, leader row */
+  --fs-pts:20px;           /* points total, standard row */
+  --fs-pts-lead:27px;      /* points total, leader row */
+  --fs-card-title:26px;    /* card header title */
+  --fs-section:19px;       /* stats section heading */
+  --fs-page:29px;          /* stats page title */
+  --fs-num-hero:52px;      /* score-entry active hole */
+  --fs-cell:12px;          /* score-entry card row figures */
+  --fs-strip:13px;         /* score on the 18-hole strip */
+  --fs-entry-name:25px;    /* player name in the score-entry header */
+
+  /* Letter-spacing and line-height steps the screens use beyond --ls-label. */
+
+  --ls-eyebrow:.16em;      /* uppercase eyebrow over a title */
+  --ls-label-2:.13em;
+  --ls-label-3:.12em;
+  --ls-nav:.1em;           /* bottom nav, chip labels */
+  --ls-caption:.08em;
+
+  --lh-none:1;             /* big figures */
+  --lh-name:1.1;           /* player names */
+  --lh-meta:1.5;           /* stacked mono meta */
+
+  /* Layout constants the screens pin exactly. */
+
+  --w-phone:390px;         /* design.html draws every screen at 390px */
+  --pos-col:26px;          /* leaderboard position column */
+  --rounds-col:76px;       /* leaderboard round-chips column */
+  --pts-col:46px;          /* leaderboard points column */
+  --chip-w:16px;           /* single round chip */
+  --cell-col:34px;         /* score-entry card row column */
+  --gap-hair:2px;          /* hole strip gap */
+  --gap-chip:3px;          /* round chip gap */
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Base — everything below is token-driven.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+a {
+  color: var(--turf);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:hover {
+  color: var(--flag);
+}
