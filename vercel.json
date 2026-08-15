@@ -1,10 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
-    {
-      "comment": "SPA fallback so /enter survives a refresh. The negative lookahead keeps /api/* out of it, so the serverless functions are never swallowed by index.html.",
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
-  ]
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
 }
