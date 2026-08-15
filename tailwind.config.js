@@ -140,11 +140,11 @@ export default {
           'var(--cell-col) 1fr var(--cell-col) var(--cell-col) var(--cell-col)',
         // Stats A: player | par 3 | par 4 | par 5
         'hole-type': '1fr var(--type-col) var(--type-col) var(--type-col)',
-        // Stats B: hole | average | stroke index | delta
-        'difficulty': '1fr var(--pts-col) var(--blow-col) var(--hit-min)',
-        // Stats C: player | birdies | pars | bogeys | blow-ups
+        // Stats B: hole | scoring average vs par
+        'difficulty': '1fr var(--pts-col)',
+        // Stats C: player | eagles | birdies | pars | bogeys | blow-ups
         'counts':
-          '1fr var(--cell-col) var(--cell-col) var(--cell-col) var(--blow-col)',
+          '1fr var(--cell-col) var(--cell-col) var(--cell-col) var(--cell-col) var(--blow-col)',
       },
     },
   },

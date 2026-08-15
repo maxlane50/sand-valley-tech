@@ -122,20 +122,48 @@ describe('buildTripStats · hole type splits', () => {
 });
 
 describe('buildTripStats · scoring counts', () => {
-  it('counts birdies, pars, bogeys and blow-ups off gross', () => {
+  it('counts eagles separately from birdies', () => {
     const strokes = overPar(0);
     strokes[0] = PARS[0]! - 1; // birdie
     strokes[1] = PARS[1]! + 1; // bogey
     strokes[2] = PARS[2]! + 2; // blow-up
-    strokes[3] = PARS[3]! - 2; // eagle, counted with birdies
+    strokes[3] = PARS[3]! - 2; // eagle, its own column
 
     const stats = build([R1], [ALICE], card(1, 1, strokes));
     expect(stats.players[0]!.counts).toEqual({
-      birdies: 2,
+      eagles: 1,
+      birdies: 1,
       pars: 14,
       bogeys: 1,
       blowups: 1,
     });
+  });
+
+  it('counts an ace on a par 3 as an eagle, not a birdie', () => {
+    const strokes = overPar(0);
+    strokes[2] = 1; // hole 3 is a par 3
+    const stats = build([R1], [ALICE], card(1, 1, strokes));
+    expect(stats.players[0]!.counts.eagles).toBe(1);
+    expect(stats.players[0]!.counts.birdies).toBe(0);
+  });
+
+  it('counts an albatross with the eagles', () => {
+    const strokes = overPar(0);
+    strokes[3] = PARS[3]! - 3; // hole 4 is a par 5
+    const stats = build([R1], [ALICE], card(1, 1, strokes));
+    expect(stats.players[0]!.counts.eagles).toBe(1);
+  });
+
+  it('classifies every played hole exactly once', () => {
+    const strokes = overPar(0);
+    strokes[0] = PARS[0]! - 2;
+    strokes[1] = PARS[1]! - 1;
+    strokes[2] = PARS[2]! + 1;
+    strokes[3] = PARS[3]! + 5;
+    const { counts } = build([R1], [ALICE], card(1, 1, strokes)).players[0]!;
+    const total =
+      counts.eagles + counts.birdies + counts.pars + counts.bogeys + counts.blowups;
+    expect(total).toBe(18);
   });
 
   it('does not count unplayed holes as blow-ups', () => {
@@ -143,7 +171,7 @@ describe('buildTripStats · scoring counts', () => {
     const bob = stats.players.find((p) => p.name === 'Bob')!;
 
     expect(bob.holesPlayed).toBe(0);
-    expect(bob.counts).toEqual({ birdies: 0, pars: 0, bogeys: 0, blowups: 0 });
+    expect(bob.counts).toEqual({ eagles: 0, birdies: 0, pars: 0, bogeys: 0, blowups: 0 });
   });
 
   it('excludes a picked-up hole from the counts', () => {
@@ -175,9 +203,9 @@ describe('buildTripStats · group figures', () => {
 });
 
 describe('buildTripStats · hole difficulty', () => {
-  it('ranks holes by actual scoring average against the printed stroke index', () => {
-    // Everyone is level par except hole 14 (si 18, the printed easiest),
-    // where both players go four over. It must rank as the hardest hole.
+  it('ranks holes purely on what the group scored, ignoring the stroke index', () => {
+    // Everyone is level par except hole 14, which happens to carry the printed
+    // easiest stroke index. It played hardest, so it ranks hardest.
     const strokes = overPar(0);
     strokes[13] = PARS[13]! + 4;
     const stats = build([R1], [ALICE, BOB], [
@@ -188,13 +216,22 @@ describe('buildTripStats · hole difficulty', () => {
     expect(stats.holesRanked).toBe(18);
     const hardest = stats.hardest[0]!;
     expect(hardest.hole).toBe(14);
-    expect(hardest.si).toBe(18);
+    expect(hardest.si).toBe(18); // carried for context only
     expect(hardest.averageVsPar).toBe(4);
     expect(hardest.actualRank).toBe(1);
-    expect(hardest.siRank).toBe(18);
-    // Printed easiest, played hardest — the biggest possible disagreement.
-    expect(hardest.delta).toBe(17);
     expect(hardest.playersCounted).toBe(2);
+  });
+
+  it('orders strictly by scoring average, whatever the stroke index says', () => {
+    const strokes = overPar(0);
+    strokes[13] = PARS[13]! + 4; // si 18, worst average
+    strokes[3] = PARS[3]! + 2; // si 1, second worst
+    const stats = build([R1], [ALICE], card(1, 1, strokes));
+
+    expect(stats.hardest.map((h) => h.hole)).toEqual([14, 4, expect.any(Number)]);
+    expect(stats.hardest[0]!.averageVsPar).toBeGreaterThan(
+      stats.hardest[1]!.averageVsPar,
+    );
   });
 
   it('returns three hardest and three easiest, easiest first', () => {
@@ -205,17 +242,14 @@ describe('buildTripStats · hole difficulty', () => {
     expect(stats.hardest[0]!.actualRank).toBe(1);
   });
 
-  it('scales the delta highlight so it matches the design at full trip size', () => {
-    const oneRound = build([R1], [ALICE], card(1, 1, overPar(0)));
-    expect(oneRound.holesRanked).toBe(18);
-    expect(oneRound.deltaHighlight).toBe(5);
-
+  it('ranks across every round, not within each one', () => {
     const two = build([R1, R2], [ALICE], [
       ...card(1, 1, overPar(0)),
       ...card(2, 1, overPar(0)),
     ]);
     expect(two.holesRanked).toBe(36);
-    expect(two.deltaHighlight).toBe(10); // 72 holes would give 20, as designed
+    expect(two.hardest[0]!.actualRank).toBe(1);
+    expect(two.easiest[0]!.actualRank).toBe(36);
   });
 
   it('averages a hole over only the players who played it', () => {
@@ -263,6 +297,21 @@ describe('buildTripStats · superlatives', () => {
     // Holes 6-11 is six, holes 13-18 is six, holes 1-4 is four.
     expect(streak.value).toBe(6);
     expect(streak.name).toBe('Alice');
+  });
+
+  it('counts eagles towards "most birdies or better"', () => {
+    const aliceCard = overPar(0);
+    aliceCard[0] = PARS[0]! - 2; // one eagle
+    const bobCard = overPar(0);
+    bobCard[0] = PARS[0]! - 1; // one birdie
+    const stats = build([R1], [ALICE, BOB], [
+      ...card(1, 1, aliceCard),
+      ...card(1, 2, bobCard),
+    ]);
+
+    const best = stats.superlatives.find((s) => s.label === 'Most birdies or better')!;
+    expect(best.value).toBe(1);
+    expect(best.name).toBe('Alice & Bob'); // an eagle and a birdie both count as one
   });
 
   it('reports a tie by name rather than picking a favourite', () => {

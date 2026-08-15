@@ -13,13 +13,6 @@ import type { PlayerRecord, RoundRecord, ScoreRecord } from './types';
 /** The hole types the splits are reported over. */
 export const HOLE_TYPES = [3, 4, 5] as const;
 
-/**
- * design.html highlights a delta of 20 or more across a full 72-hole trip.
- * Scaled so the same proportion applies part-way through: 72 * 0.28 -> 20.
- */
-const DELTA_HIGHLIGHT_RATIO = 0.28;
-const DELTA_HIGHLIGHT_MIN = 5;
-
 export interface HoleTypeStat {
   par: number;
   holes: number;
@@ -30,7 +23,9 @@ export interface HoleTypeStat {
 }
 
 export interface ScoringCounts {
-  /** Gross birdie or better. */
+  /** Gross two under par or better, so an ace on a par 3 lands here. */
+  eagles: number;
+  /** Gross exactly one under par. Eagles are counted separately. */
   birdies: number;
   pars: number;
   bogeys: number;
@@ -65,14 +60,11 @@ export interface HoleDifficulty {
   hole: number;
   par: number;
   si: number;
+  /** Group mean gross strokes over par. This is what the ranking is built on. */
   averageVsPar: number;
   playersCounted: number;
   /** 1 = played hardest of every hole in the trip so far. */
   actualRank: number;
-  /** Where the printed stroke index put it, ranked across the same holes. */
-  siRank: number;
-  /** siRank - actualRank. Positive means it played harder than printed. */
-  delta: number;
 }
 
 export interface Superlative {
@@ -101,8 +93,6 @@ export interface TripStats {
   easiest: HoleDifficulty[];
   /** How many holes the ranking covers, e.g. 72 after four full rounds. */
   holesRanked: number;
-  /** |delta| at or above this is worth highlighting. */
-  deltaHighlight: number;
   superlatives: Superlative[];
   rounds: RoundLine[];
   problems: string[];
@@ -139,10 +129,11 @@ function typeStats(holes: readonly Played[]): HoleTypeStat[] {
 }
 
 function countScores(holes: readonly Played[]): ScoringCounts {
-  const counts: ScoringCounts = { birdies: 0, pars: 0, bogeys: 0, blowups: 0 };
+  const counts: ScoringCounts = { eagles: 0, birdies: 0, pars: 0, bogeys: 0, blowups: 0 };
   for (const hole of holes) {
     const delta = hole.strokes - hole.par;
-    if (delta <= -1) counts.birdies += 1;
+    if (delta <= -2) counts.eagles += 1;
+    else if (delta === -1) counts.birdies += 1;
     else if (delta === 0) counts.pars += 1;
     else if (delta === 1) counts.bogeys += 1;
     else counts.blowups += 1;
@@ -330,8 +321,6 @@ export function buildTripStats(
         playersCounted: 1,
         averageVsPar: 0,
         actualRank: 0,
-        siRank: 0,
-        delta: 0,
       });
     }
   }
@@ -341,23 +330,15 @@ export function buildTripStats(
     entry.averageVsPar = entry.total / entry.playersCounted;
   }
 
-  // Hardest first. Ties broken by printed stroke index so the order is stable.
+  // Hardest first, purely on what the group actually scored. Ties broken by
+  // round then hole so the order is stable rather than arbitrary.
   const byActual = [...difficulty].sort(
-    (a, b) => b.averageVsPar - a.averageVsPar || a.si - b.si,
+    (a, b) =>
+      b.averageVsPar - a.averageVsPar || a.roundNumber - b.roundNumber || a.hole - b.hole,
   );
   byActual.forEach((entry, i) => {
     entry.actualRank = i + 1;
   });
-
-  // The printed card's own ranking over the same set of holes.
-  const bySi = [...difficulty].sort((a, b) => a.si - b.si || a.roundNumber - b.roundNumber);
-  bySi.forEach((entry, i) => {
-    entry.siRank = i + 1;
-  });
-
-  for (const entry of difficulty) {
-    entry.delta = entry.siRank - entry.actualRank;
-  }
 
   const strip = ({ total, ...rest }: HoleDifficulty & { total: number }): HoleDifficulty =>
     rest;
@@ -391,9 +372,12 @@ export function buildTripStats(
       withHoles.map((p) => ({ name: p.name, value: p.counts.blowups })),
     ),
     pickSuperlative(
-      'Most birdies',
+      'Most birdies or better',
       'gross, eagles included',
-      withHoles.map((p) => ({ name: p.name, value: p.counts.birdies })),
+      withHoles.map((p) => ({
+        name: p.name,
+        value: p.counts.birdies + p.counts.eagles,
+      })),
     ),
   ].filter((s): s is Superlative => s !== null);
 
@@ -407,10 +391,6 @@ export function buildTripStats(
     hardest: byActual.slice(0, 3).map(strip),
     easiest: byActual.slice(-3).reverse().map(strip),
     holesRanked: difficulty.length,
-    deltaHighlight: Math.max(
-      DELTA_HIGHLIGHT_MIN,
-      Math.round(difficulty.length * DELTA_HIGHLIGHT_RATIO),
-    ),
     superlatives,
     rounds: roundLines,
     problems: [...new Set(problems)],

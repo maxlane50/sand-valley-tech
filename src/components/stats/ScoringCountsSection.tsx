@@ -1,5 +1,35 @@
-import type { GroupStats, PlayerStats } from '../../lib/stats';
+import type { GroupStats, PlayerStats, ScoringCounts } from '../../lib/stats';
 import { SECTION_LETTER } from './format';
+
+/** Eagles are their own column; birdies means exactly one under. */
+const COLUMNS: { key: keyof ScoringCounts; label: string }[] = [
+  { key: 'eagles', label: 'Eag' },
+  { key: 'birdies', label: 'Bird' },
+  { key: 'pars', label: 'Par' },
+  { key: 'bogeys', label: 'Bog' },
+  { key: 'blowups', label: 'Blow' },
+];
+
+function figureClass(
+  key: keyof ScoringCounts,
+  value: number,
+  best: { eagles: number; birdies: number; blowups: number },
+): string {
+  if (key === 'eagles') {
+    return value > 0 ? 'text-turf font-semibold' : 'text-ink-25';
+  }
+  if (key === 'birdies') {
+    return value === best.birdies && best.birdies > 0
+      ? 'text-turf font-semibold'
+      : 'text-ink';
+  }
+  if (key === 'blowups') {
+    return value === best.blowups && best.blowups > 0
+      ? 'text-flag font-semibold'
+      : 'text-ink-70';
+  }
+  return key === 'bogeys' ? 'text-ink-70' : 'text-ink';
+}
 
 export function ScoringCountsSection({
   players,
@@ -9,13 +39,19 @@ export function ScoringCountsSection({
   group: GroupStats;
 }) {
   // Ordered by birdies, as design.html does, rather than inheriting section A's
-  // points-per-hole order.
+  // points-per-hole order. Eagles break the tie.
   const ordered = [...players].sort(
-    (a, b) => b.counts.birdies - a.counts.birdies || a.name.localeCompare(b.name),
+    (a, b) =>
+      b.counts.birdies - a.counts.birdies ||
+      b.counts.eagles - a.counts.eagles ||
+      a.name.localeCompare(b.name),
   );
   const played = ordered.filter((p) => p.holesPlayed > 0);
-  const mostBirdies = Math.max(0, ...played.map((p) => p.counts.birdies));
-  const mostBlowups = Math.max(0, ...played.map((p) => p.counts.blowups));
+  const best = {
+    eagles: Math.max(0, ...played.map((p) => p.counts.eagles)),
+    birdies: Math.max(0, ...played.map((p) => p.counts.birdies)),
+    blowups: Math.max(0, ...played.map((p) => p.counts.blowups)),
+  };
 
   return (
     <section className="px-gutter pt-4 pb-2">
@@ -26,10 +62,11 @@ export function ScoringCountsSection({
 
       <div className="grid grid-cols-counts gap-1 border-b-strong border-ink pb-1 font-ui text-nano font-bold uppercase tracking-nav text-ink-45">
         <div>Player</div>
-        <div className="text-right">Bird</div>
-        <div className="text-right">Par</div>
-        <div className="text-right">Bog</div>
-        <div className="text-right">Blow</div>
+        {COLUMNS.map((column) => (
+          <div key={column.key} className="text-right">
+            {column.label}
+          </div>
+        ))}
       </div>
 
       {ordered.map((player) => (
@@ -38,28 +75,18 @@ export function ScoringCountsSection({
           className="grid grid-cols-counts items-center gap-1 border-b border-rule-soft py-2"
         >
           <span className="truncate font-display text-body text-ink">{player.name}</span>
-          <span
-            className={`text-right font-num text-strip font-semibold ${
-              player.counts.birdies === mostBirdies && mostBirdies > 0
-                ? 'text-turf'
-                : 'text-ink'
-            }`}
-          >
-            {player.counts.birdies}
-          </span>
-          <span className="text-right font-num text-strip text-ink">{player.counts.pars}</span>
-          <span className="text-right font-num text-strip text-ink-70">
-            {player.counts.bogeys}
-          </span>
-          <span
-            className={`text-right font-num text-strip font-semibold ${
-              player.counts.blowups === mostBlowups && mostBlowups > 0
-                ? 'text-flag'
-                : 'text-ink-70'
-            }`}
-          >
-            {player.counts.blowups}
-          </span>
+          {COLUMNS.map((column) => (
+            <span
+              key={column.key}
+              className={`text-right font-num text-strip ${figureClass(
+                column.key,
+                player.counts[column.key],
+                best,
+              )}`}
+            >
+              {player.counts[column.key]}
+            </span>
+          ))}
         </div>
       ))}
 
@@ -68,20 +95,20 @@ export function ScoringCountsSection({
         <span className="font-ui text-micro font-bold uppercase tracking-label text-ink">
           Group
         </span>
-        <span className="text-right font-num text-strip font-semibold text-ink">
-          {group.counts.birdies}
-        </span>
-        <span className="text-right font-num text-strip text-ink">{group.counts.pars}</span>
-        <span className="text-right font-num text-strip text-ink-70">
-          {group.counts.bogeys}
-        </span>
-        <span className="text-right font-num text-strip font-semibold text-ink-70">
-          {group.counts.blowups}
-        </span>
+        {COLUMNS.map((column) => (
+          <span
+            key={column.key}
+            className={`text-right font-num text-strip font-semibold ${
+              column.key === 'bogeys' || column.key === 'blowups' ? 'text-ink-70' : 'text-ink'
+            }`}
+          >
+            {group.counts[column.key]}
+          </span>
+        ))}
       </div>
 
       <p className="pt-2 font-num text-nano leading-body text-ink-45">
-        gross vs par · bird includes eagles · blow = double bogey or worse
+        gross vs par · eagle = two under or better · blow = double bogey or worse
       </p>
     </section>
   );
