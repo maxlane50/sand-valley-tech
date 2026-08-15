@@ -140,6 +140,10 @@
      fixed slot carrying one mark per round. The SVG viewBox matches these. */
   --spark-h:20px;
 
+  /* The leader's champion block. Roughly twice --row-h, sized to hold the
+     nameplate at --fs-display over the total at --fs-num-xl. */
+  --champion-h:112px;
+
   /* Motion. Long enough to read as deliberate, short enough not to be waited on. */
   --ease-settle:cubic-bezier(0.2, 0.8, 0.2, 1);
   --dur-reorder:520ms;

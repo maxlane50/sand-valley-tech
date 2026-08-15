@@ -159,6 +159,149 @@ async function exists(
   return Array.isArray(rows) && rows.length > 0;
 }
 
+/* ─── POST /api/save-players ─────────────────────────────────────────────── */
+
+export interface PlayerInput {
+  /** Absent for a new player. */
+  id?: number;
+  name: string;
+  handicapIndex: number;
+}
+
+export interface SavePlayersBody {
+  pin: string;
+  players: PlayerInput[];
+  /** Ids to remove. Refused for anyone who has already posted a score. */
+  deleteIds?: number[];
+}
+
+/** Plus handicaps are negative; 54.0 is the USGA maximum index. */
+const MIN_INDEX = -10;
+const MAX_INDEX = 54;
+const MAX_NAME = 40;
+
+/** Indexes are stored to one decimal, matching numeric(4,1) in the schema. */
+function roundIndex(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+export async function savePlayers(body: unknown, client: string): Promise<ApiResult> {
+  const { pin, players, deleteIds } = (body ?? {}) as Partial<SavePlayersBody>;
+
+  const failure = checkPin(pin, client);
+  if (failure) return failure;
+
+  if (!Array.isArray(players)) {
+    return fail(400, 'players must be an array.');
+  }
+
+  const cleaned: PlayerInput[] = [];
+  for (const entry of players) {
+    const name = typeof entry?.name === 'string' ? entry.name.trim() : '';
+    if (!name) return fail(400, 'Every player needs a name.');
+    if (name.length > MAX_NAME) {
+      return fail(400, `"${name.slice(0, 12)}…" is too long; keep names under ${MAX_NAME} characters.`);
+    }
+    const index = Number(entry?.handicapIndex);
+    if (!Number.isFinite(index) || index < MIN_INDEX || index > MAX_INDEX) {
+      return fail(400, `${name} has an impossible handicap index. Use ${MIN_INDEX} to ${MAX_INDEX}, negative for a plus handicap.`);
+    }
+    if (entry.id !== undefined && !Number.isInteger(entry.id)) {
+      return fail(400, 'Player ids must be integers.');
+    }
+    cleaned.push({ id: entry.id, name, handicapIndex: roundIndex(index) });
+  }
+
+  const removing = Array.isArray(deleteIds) ? deleteIds : [];
+  if (removing.some((id) => !Number.isInteger(id))) {
+    return fail(400, 'Player ids must be integers.');
+  }
+
+  const config = getConfig();
+  if ('error' in config) return fail(500, config.error);
+
+  const existingResponse = await postgrest(config, 'players?select=id,name,handicap_index', {
+    method: 'GET',
+  });
+  if (!existingResponse.ok) {
+    return fail(500, `Could not read players: ${await existingResponse.text()}`);
+  }
+  const existing = (await existingResponse.json()) as {
+    id: number;
+    name: string;
+    handicap_index: number;
+  }[];
+  const byId = new Map(existing.map((p) => [p.id, p]));
+
+  // Anyone who has posted a score has a locked index — see the note in
+  // schema.sql. Changing it would silently rescore every round already played,
+  // because the leaderboard recomputes from handicap_index on every read.
+  const scoredResponse = await postgrest(config, 'scores?select=player_id', { method: 'GET' });
+  if (!scoredResponse.ok) {
+    return fail(500, `Could not read scores: ${await scoredResponse.text()}`);
+  }
+  const scored = new Set(
+    ((await scoredResponse.json()) as { player_id: number }[]).map((s) => s.player_id),
+  );
+
+  for (const entry of cleaned) {
+    if (entry.id === undefined) continue;
+    const current = byId.get(entry.id);
+    if (!current) return fail(404, `No player with id ${entry.id}.`);
+    const changed = Math.abs(Number(current.handicap_index) - entry.handicapIndex) > 1e-9;
+    if (changed && scored.has(entry.id)) {
+      return fail(409, `${current.name} has already posted a score, so their handicap index is locked. Names can still be changed.`, {
+        code: 'handicap-locked',
+      });
+    }
+  }
+
+  for (const id of removing) {
+    if (scored.has(id)) {
+      const name = byId.get(id)?.name ?? `id ${id}`;
+      return fail(409, `${name} has scores recorded and cannot be removed. Delete their cards first.`, {
+        code: 'has-scores',
+      });
+    }
+  }
+
+  // Deletes, then updates, then inserts.
+  for (const id of removing) {
+    const response = await postgrest(config, `players?id=eq.${id}`, { method: 'DELETE' });
+    if (!response.ok) return fail(500, `Could not remove player: ${await response.text()}`);
+  }
+
+  let updated = 0;
+  for (const entry of cleaned) {
+    if (entry.id === undefined) continue;
+    const response = await postgrest(config, `players?id=eq.${entry.id}`, {
+      method: 'PATCH',
+      body: { name: entry.name, handicap_index: entry.handicapIndex },
+      prefer: 'return=minimal',
+    });
+    if (!response.ok) return fail(500, `Could not update player: ${await response.text()}`);
+    updated += 1;
+  }
+
+  const inserts = cleaned
+    .filter((entry) => entry.id === undefined)
+    .map((entry) => ({ name: entry.name, handicap_index: entry.handicapIndex }));
+
+  if (inserts.length > 0) {
+    const response = await postgrest(config, 'players', {
+      method: 'POST',
+      body: inserts,
+      prefer: 'return=minimal',
+    });
+    if (!response.ok) return fail(500, `Could not add players: ${await response.text()}`);
+  }
+
+  return {
+    status: 200,
+    body: { ok: true, inserted: inserts.length, updated, deleted: removing.length },
+  };
+}
+
 export async function saveCard(body: unknown, client: string): Promise<ApiResult> {
   const { pin, roundId, playerId, strokes } = (body ?? {}) as Partial<SaveCardBody>;
 

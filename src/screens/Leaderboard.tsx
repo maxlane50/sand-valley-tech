@@ -15,22 +15,92 @@ const MOVEMENT: Record<Movement, { glyph: string; className: string }> = {
 };
 
 /**
- * Title only — the round readout and the rounds list live on Stats.
+ * Masthead, set like a newspaper nameplate: a dateline of venue and round
+ * state, a hairline, then the title and its italic tagline.
  *
- * The "presented by" line is set in Newsreader italic, as design.html's canvas
- * masthead has it. The phone mock used uppercase Archivo there; the serif reads
- * as a nameplate rather than a label, and the italic is already being loaded.
+ * The dateline reinstates the round readout that was stripped out earlier, but
+ * as one 8px line rather than the two-line mono block it used to be.
  */
-function Header() {
+function Header({ dateline }: { dateline: string }) {
   return (
-    <header className="flex-none border-b-strong border-ink bg-paper-2 px-gutter pt-3 pb-2">
-      <div className="letterpress font-display text-card-title leading-tight text-ink">
-        {TRIP.title}
+    <header className="flex-none border-b-strong border-ink bg-paper-2 px-gutter pt-2 pb-2">
+      <div className="flex items-baseline justify-between gap-2 pb-1">
+        <span className="truncate font-ui text-pico font-bold uppercase tracking-eyebrow text-ink-45">
+          {TRIP.venue}
+        </span>
+        <span className="flex-none font-num text-pico uppercase text-ink-45">{dateline}</span>
       </div>
-      <div className="font-display text-list italic leading-name text-ink-70">
-        {TRIP.presentedBy}
+      <div className="border-t border-rule pt-1">
+        <div className="letterpress font-display text-card-title leading-tight text-ink">
+          {TRIP.title}
+        </div>
+        <div className="font-display text-list italic leading-name text-ink-70">
+          {TRIP.presentedBy}
+        </div>
       </div>
     </header>
+  );
+}
+
+/**
+ * The leader, set as a champion block rather than another table row: name at
+ * --fs-display over the total at --fs-num-xl, both of which existed in the
+ * tokens and had never been used.
+ *
+ * It stays inside the row list on purpose, so useFlipReorder still owns it —
+ * which means the block swells into place as somebody takes the lead.
+ */
+function ChampionRow({
+  row,
+  innerRef,
+}: {
+  row: LeaderRow;
+  innerRef: (element: HTMLElement | null) => void;
+}) {
+  const points = useCountUp(row.totalPoints);
+
+  return (
+    <div
+      ref={innerRef}
+      className="flex min-h-champion-h flex-1 flex-col justify-center gap-1 border-b border-rule-soft bg-turf-deep px-gutter py-3"
+    >
+      <div className="flex items-baseline gap-2">
+        <span className="font-num text-num-m font-medium leading-none text-sand">
+          {row.position}
+        </span>
+        <span className="font-ui text-pico font-bold uppercase tracking-eyebrow text-fescue">
+          Leader
+        </span>
+      </div>
+
+      <div className="flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <div className="letterpress-dark truncate font-display text-display leading-tight text-paper">
+            {row.name}
+          </div>
+          <div className="truncate font-ui text-nano font-semibold uppercase tracking-nav text-fescue">
+            hcp {row.handicapIndex.toFixed(1)} · gross {row.grossTotal ?? '–'}
+          </div>
+        </div>
+        <div className="flex flex-none items-end gap-2">
+          <div className="flex gap-chip pb-1">
+            {row.rounds.map((cell) => (
+              <div
+                key={cell.roundId}
+                className={`w-chip-w rounded-sm py-chip text-center font-num text-chip font-medium ${
+                  cell.isBestOfTrip ? 'bg-sand text-ink' : 'bg-leader-chip text-paper'
+                }`}
+              >
+                {cell.points ?? '·'}
+              </div>
+            ))}
+          </div>
+          <span className="font-num text-num-xl font-semibold leading-none text-sand">
+            {points}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -186,9 +256,17 @@ export function Leaderboard() {
     );
   }
 
+  const dateline = board.current
+    ? `R${board.current.number} · thru ${board.current.holesPlayed}`
+    : 'Not started';
+
+  // A shared lead is a real outcome, but two champion blocks would read as a
+  // bug. On a tie the leaders fall back to the standard dark row.
+  const soleLeader = board.rows.filter((row) => row.position === 1).length === 1;
+
   return (
     <>
-      <Header />
+      <Header dateline={dateline} />
 
       <div className="flex-none grid grid-cols-board gap-2 border-b border-rule bg-paper px-gutter pt-2 pb-2 font-ui text-nano font-bold uppercase tracking-label-2 text-ink-45">
         <div>Pos</div>
@@ -199,14 +277,22 @@ export function Leaderboard() {
 
       {/* Rows share the leftover height so the board fills the page. */}
       <div className="flex flex-1 flex-col overflow-auto bg-paper">
-        {board.rows.map((row, index) => (
-          <Row
-            key={row.playerId}
-            row={row}
-            index={index}
-            innerRef={registerRow(row.playerId)}
-          />
-        ))}
+        {board.rows.map((row, index) =>
+          row.isLeader && soleLeader ? (
+            <ChampionRow
+              key={row.playerId}
+              row={row}
+              innerRef={registerRow(row.playerId)}
+            />
+          ) : (
+            <Row
+              key={row.playerId}
+              row={row}
+              index={index}
+              innerRef={registerRow(row.playerId)}
+            />
+          ),
+        )}
 
         {board.problems.length > 0 ? (
           <div className="border-b border-rule bg-paper-2 px-gutter py-3">

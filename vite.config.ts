@@ -5,7 +5,7 @@ import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 
 import { runPost } from './api/_lib/adapter';
-import { saveCard, verifyPin } from './api/_lib/handlers';
+import { saveCard, savePlayers, verifyPin } from './api/_lib/handlers';
 
 /**
  * The real environment, captured before any .env file is merged in. A variable
@@ -58,6 +58,7 @@ function localApi(): Plugin {
   const routes = {
     '/api/verify-pin': verifyPin,
     '/api/save-card': saveCard,
+    '/api/save-players': savePlayers,
   } as const;
 
   return {

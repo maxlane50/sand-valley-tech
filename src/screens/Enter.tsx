@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { CardEntry } from '../components/entry/CardEntry';
 import { CardPicker } from '../components/entry/CardPicker';
 import { PinGate } from '../components/entry/PinGate';
+import { PlayersEditor } from '../components/entry/PlayersEditor';
 import { Notice } from '../components/Notice';
 import { getCourse } from '../data/courses';
 import { useTrip } from '../hooks/useTrip';
@@ -32,6 +33,7 @@ export function Enter() {
   const [pin, setPin] = useState<string | null>(() => loadPin());
   const [roundId, setRoundId] = useState<number | null>(null);
   const [playerId, setPlayerId] = useState<number | null>(null);
+  const [view, setView] = useState<'rounds' | 'players'>('rounds');
 
   /** Holes already saved per player for the chosen round. */
   const entered = useMemo(() => {
@@ -43,6 +45,12 @@ export function Enter() {
     }
     return counts;
   }, [state, roundId]);
+
+  /** Anyone with a score anywhere has a locked handicap index. */
+  const playersWithScores = useMemo(() => {
+    if (state.status !== 'ready') return new Set<number>();
+    return new Set(state.data.scores.map((score) => score.player_id));
+  }, [state]);
 
   const selection = useMemo(() => {
     if (state.status !== 'ready' || roundId === null || playerId === null) return null;
@@ -108,6 +116,22 @@ export function Enter() {
   }
 
   if (!selection) {
+    if (view === 'players') {
+      return (
+        <PlayersEditor
+          players={state.data.players}
+          playersWithScores={playersWithScores}
+          pin={pin}
+          onBack={() => setView('rounds')}
+          onSaved={refresh}
+          onPinRejected={() => {
+            clearPin();
+            setPin(null);
+          }}
+        />
+      );
+    }
+
     return (
       <CardPicker
         rounds={[...state.data.rounds].sort(
@@ -118,6 +142,7 @@ export function Enter() {
         roundId={roundId}
         onPickRound={setRoundId}
         onPickPlayer={setPlayerId}
+        onManagePlayers={() => setView('players')}
       />
     );
   }

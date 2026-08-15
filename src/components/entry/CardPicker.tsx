@@ -27,6 +27,7 @@ export function CardPicker({
   roundId,
   onPickRound,
   onPickPlayer,
+  onManagePlayers,
 }: {
   rounds: readonly RoundRecord[];
   players: readonly PlayerRecord[];
@@ -34,6 +35,7 @@ export function CardPicker({
   roundId: number | null;
   onPickRound: (id: number | null) => void;
   onPickPlayer: (id: number) => void;
+  onManagePlayers: () => void;
 }) {
   const round = rounds.find((r) => r.id === roundId) ?? null;
 
@@ -81,6 +83,14 @@ export function CardPicker({
               </button>
             );
           })}
+
+          <button
+            type="button"
+            onClick={onManagePlayers}
+            className="min-h-hit-min pt-3 font-ui text-nano font-bold uppercase tracking-label text-turf"
+          >
+            Players &amp; handicaps ▶
+          </button>
         </div>
       ) : (
         <div className="px-gutter pt-3 pb-5">

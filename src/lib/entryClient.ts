@@ -57,6 +57,17 @@ export function saveCard(input: {
   return post<{ ok: true; grossTotal: number }>('/api/save-card', input);
 }
 
+export function savePlayers(input: {
+  pin: string;
+  players: { id?: number; name: string; handicapIndex: number }[];
+  deleteIds: number[];
+}) {
+  return post<{ ok: true; inserted: number; updated: number; deleted: number }>(
+    '/api/save-players',
+    input,
+  );
+}
+
 /* ─── PIN storage ─────────────────────────────────────────────────────────
    sessionStorage, so it clears when the tab closes. This is a convenience
    gate on the UI — the PIN is checked server-side on every write, which is

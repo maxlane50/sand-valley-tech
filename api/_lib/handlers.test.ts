@@ -6,7 +6,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { saveCard, verifyPin } from './handlers';
+import { saveCard, savePlayers, verifyPin } from './handlers';
 
 const PIN = '246813';
 const VALID = Array.from({ length: 18 }, () => 4); // gross 72
@@ -189,5 +189,130 @@ describe('saveCard', () => {
     for (const [url] of fetchMock.mock.calls) {
       expect(String(url)).not.toContain('//rest/v1');
     }
+  });
+});
+
+describe('savePlayers', () => {
+  /** Two existing players; only Marty has posted a score. */
+  const EXISTING = [
+    { id: 1, name: 'Marty D.', handicap_index: 4.0 },
+    { id: 2, name: 'Cheech', handicap_index: 8.0 },
+  ];
+
+  function stub({ scored = [1] }: { scored?: number[] } = {}) {
+    fetchMock.mockImplementation(async (url: string, init?: { method?: string }) => {
+      const u = String(url);
+      if (init?.method === 'GET' || init === undefined) {
+        if (u.includes('/players?select=')) return ok(EXISTING);
+        if (u.includes('/scores?select=player_id')) {
+          return ok(scored.map((player_id) => ({ player_id })));
+        }
+      }
+      return ok();
+    });
+  }
+
+  const body = (overrides: Record<string, unknown> = {}) => ({
+    pin: PIN,
+    players: [
+      { id: 1, name: 'Marty D.', handicapIndex: 4.0 },
+      { id: 2, name: 'Cheech', handicapIndex: 8.0 },
+    ],
+    deleteIds: [],
+    ...overrides,
+  });
+
+  beforeEach(() => stub());
+
+  it('refuses without a valid PIN', async () => {
+    const result = await savePlayers(body({ pin: 'nope' }), client());
+    expect(result.status).toBe(401);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('updates names and indexes for players with no scores', async () => {
+    const result = await savePlayers(
+      body({ players: [{ id: 2, name: 'Cheech Marin', handicapIndex: 7.4 }] }),
+      client(),
+    );
+    expect(result.status).toBe(200);
+    const patch = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH');
+    expect(String(patch![0])).toContain('players?id=eq.2');
+    expect(JSON.parse(patch![1].body)).toEqual({ name: 'Cheech Marin', handicap_index: 7.4 });
+  });
+
+  it('LOCKS the handicap of a player who has already posted a score', async () => {
+    const result = await savePlayers(
+      body({ players: [{ id: 1, name: 'Marty D.', handicapIndex: 2.0 }] }),
+      client(),
+    );
+    expect(result.status).toBe(409);
+    expect(result.body.code).toBe('handicap-locked');
+    expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'PATCH')).toBe(false);
+  });
+
+  it('still allows renaming a player whose index is locked', async () => {
+    const result = await savePlayers(
+      body({ players: [{ id: 1, name: 'Martin D.', handicapIndex: 4.0 }] }),
+      client(),
+    );
+    expect(result.status).toBe(200);
+  });
+
+  it('refuses to delete a player who has scores', async () => {
+    const result = await savePlayers(body({ players: [], deleteIds: [1] }), client());
+    expect(result.status).toBe(409);
+    expect(result.body.code).toBe('has-scores');
+    expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'DELETE')).toBe(false);
+  });
+
+  it('deletes a player who has none', async () => {
+    const result = await savePlayers(body({ players: [], deleteIds: [2] }), client());
+    expect(result.status).toBe(200);
+    const del = fetchMock.mock.calls.find(([, i]) => i?.method === 'DELETE');
+    expect(String(del![0])).toContain('players?id=eq.2');
+  });
+
+  it('inserts a player with no id', async () => {
+    const result = await savePlayers(
+      body({ players: [{ name: 'Big Wes', handicapIndex: 11.2 }] }),
+      client(),
+    );
+    expect(result.status).toBe(200);
+    expect(result.body.inserted).toBe(1);
+    const post = fetchMock.mock.calls.find(
+      ([u, i]) => i?.method === 'POST' && String(u).includes('/players'),
+    );
+    expect(JSON.parse(post![1].body)).toEqual([{ name: 'Big Wes', handicap_index: 11.2 }]);
+  });
+
+  it('accepts a negative index for a plus handicap', async () => {
+    const result = await savePlayers(
+      body({ players: [{ name: 'Scratch', handicapIndex: -2.4 }] }),
+      client(),
+    );
+    expect(result.status).toBe(200);
+  });
+
+  it('rejects an empty name and an impossible index', async () => {
+    expect((await savePlayers(body({ players: [{ name: '  ', handicapIndex: 4 }] }), client())).status).toBe(400);
+    expect((await savePlayers(body({ players: [{ name: 'X', handicapIndex: 99 }] }), client())).status).toBe(400);
+    expect((await savePlayers(body({ players: [{ name: 'X', handicapIndex: -50 }] }), client())).status).toBe(400);
+  });
+
+  it('rounds an index to one decimal, matching numeric(4,1)', async () => {
+    await savePlayers(body({ players: [{ name: 'Rounder', handicapIndex: 12.34 }] }), client());
+    const post = fetchMock.mock.calls.find(
+      ([u, i]) => i?.method === 'POST' && String(u).includes('/players'),
+    );
+    expect(JSON.parse(post![1].body)[0].handicap_index).toBe(12.3);
+  });
+
+  it('404s on an unknown player id', async () => {
+    const result = await savePlayers(
+      body({ players: [{ id: 99, name: 'Ghost', handicapIndex: 4 }] }),
+      client(),
+    );
+    expect(result.status).toBe(404);
   });
 });

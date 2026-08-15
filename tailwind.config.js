@@ -107,6 +107,7 @@ export default {
       'chip-w': 'var(--chip-w)',
       'cell-col': 'var(--cell-col)',
       'spark-h': 'var(--spark-h)',
+      'champion-h': 'var(--champion-h)',
       app: 'var(--app-h)',
       'pos-col': 'var(--pos-col)',
       'pts-col': 'var(--pts-col)',
@@ -145,6 +146,8 @@ export default {
         'hole-type': '1fr var(--type-col) var(--type-col) var(--type-col)',
         // Stats B: hole | scoring average vs par
         'difficulty': '1fr var(--pts-col)',
+        // Players editor: name | index | remove
+        'players': '1fr var(--rounds-col) var(--cell-col)',
         // Stats D: player | sparkline | positions gained
         'trajectory': '1fr var(--rounds-col) var(--cell-col)',
         // Stats C: player | eagles | birdies | pars | bogeys | blow-ups

@@ -13,6 +13,7 @@ import { HOLES_PER_ROUND } from '../../scoring/scoring';
 import type { Course } from '../../scoring/types';
 import { Keypad } from './Keypad';
 import { PlayerChips } from './PlayerChips';
+import { SaveStamp } from './SaveStamp';
 
 /**
  * Score entry is an input surface, not a review surface.
@@ -268,6 +269,16 @@ export function CardEntry({
         ) : null}
       </div>
 
+      {save.phase === 'saved' ? (
+        <SaveStamp
+          grossTotal={save.grossTotal}
+          points={card.points}
+          vsPar={vsPar}
+          nextName={nextPlayer ? players.find((p) => p.id === nextPlayer)?.name : undefined}
+          onNext={nextPlayer !== null ? () => onSelectPlayer(nextPlayer) : undefined}
+          onDismiss={() => setSave({ phase: 'entering', error: null })}
+        />
+      ) : (
       <div className="flex flex-1 flex-col border-t border-rule-strong bg-paper-2 pb-2">
         <Keypad
           activePar={active.par}
@@ -290,35 +301,18 @@ export function CardEntry({
             ↺ Clear card
           </button>
 
-          {save.phase === 'saved' ? (
-            <div className="flex items-center gap-3">
-              <span className="font-ui text-nano font-bold uppercase tracking-label text-turf">
-                Saved ✓ {save.grossTotal}
-              </span>
-              {nextPlayer !== null ? (
-                <button
-                  type="button"
-                  onClick={() => onSelectPlayer(nextPlayer)}
-                  className="min-h-hit-min rounded-md bg-turf-deep px-4 font-ui text-micro font-bold uppercase tracking-label text-paper"
-                >
-                  Next ▶
-                </button>
-              ) : null}
-            </div>
-          ) : (
-            <button
-              type="button"
-              disabled={!card.complete || save.phase === 'saving'}
-              onClick={submit}
-              className="min-h-hit-min rounded-md bg-turf-deep px-4 font-ui text-micro font-bold uppercase tracking-label text-paper disabled:bg-transparent disabled:text-ink-25"
-            >
-              {save.phase === 'saving'
-                ? 'Saving'
-                : card.complete
-                  ? 'Save card'
-                  : `${HOLES_PER_ROUND - card.entered} left`}
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={!card.complete || save.phase === 'saving'}
+            onClick={submit}
+            className="min-h-hit-min rounded-md bg-turf-deep px-4 font-ui text-micro font-bold uppercase tracking-label text-paper disabled:bg-transparent disabled:text-ink-25"
+          >
+            {save.phase === 'saving'
+              ? 'Saving'
+              : card.complete
+                ? 'Save card'
+                : `${HOLES_PER_ROUND - card.entered} left`}
+          </button>
         </div>
 
         {save.phase === 'entering' && save.error ? (
@@ -327,6 +321,7 @@ export function CardEntry({
           </p>
         ) : null}
       </div>
+      )}
     </>
   );
 }

@@ -23,6 +23,40 @@
   }
 }
 
+/* The save stamp: ink pressed onto the card, then a rule drawn under it.
+   Both are plain CSS animations so the reduced-motion block below neutralises
+   them without any JS involvement. */
+@keyframes sv-stamp-in {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes sv-rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@layer utilities {
+  .stamp-in {
+    animation: sv-stamp-in 300ms var(--ease-settle) both;
+  }
+
+  .rule-draw {
+    transform-origin: left;
+    animation: sv-rule-draw var(--dur-reorder) var(--ease-settle) both;
+  }
+}
+
 /* Anyone who has asked for less motion gets none of it. The FLIP and count-up
    hooks check the same query in JS. */
 @media (prefers-reduced-motion: reduce) {
