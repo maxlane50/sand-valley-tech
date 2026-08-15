@@ -7,7 +7,7 @@ export function Superlatives({ items }: { items: readonly Superlative[] }) {
   return (
     <section className="bg-turf-deep px-gutter pt-4 pb-6">
       <div className="flex items-baseline gap-2 pb-3">
-        <span className="font-num text-micro text-sand">D</span>
+        <span className="font-num text-micro text-sand">E</span>
         <h2 className="letterpress-dark font-display text-section text-paper">Superlatives</h2>
       </div>
 

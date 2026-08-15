@@ -5,6 +5,7 @@ import { ByHoleType } from '../components/stats/ByHoleType';
 import { HoleDifficultySection } from '../components/stats/HoleDifficultySection';
 import { ScoringCountsSection } from '../components/stats/ScoringCountsSection';
 import { Superlatives } from '../components/stats/Superlatives';
+import { Trajectory } from '../components/stats/Trajectory';
 import { TRIP } from '../config/trip';
 import { getCourse } from '../data/courses';
 import { useTrip } from '../hooks/useTrip';
@@ -112,6 +113,8 @@ export function Stats() {
       />
 
       <ScoringCountsSection players={stats.players} group={stats.group} />
+
+      <Trajectory players={stats.players} scoredRounds={stats.scoredRounds} />
 
       {stats.problems.length > 0 ? (
         <div className="border-t border-rule bg-paper-2 px-gutter py-2">

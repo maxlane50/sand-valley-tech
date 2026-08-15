@@ -348,6 +348,104 @@ describe('buildTripStats · superlatives', () => {
   });
 });
 
+describe('buildTripStats · trajectory', () => {
+  it('records a standing after every scored round', () => {
+    const stats = build([R1, R2], [ALICE, BOB], [
+      ...card(1, 1, overPar(0)),
+      ...card(1, 2, overPar(4)),
+      ...card(2, 1, overPar(0)),
+      ...card(2, 2, overPar(4)),
+    ]);
+
+    expect(stats.scoredRounds).toBe(2);
+    for (const player of stats.players) {
+      expect(player.trajectory).toHaveLength(2);
+    }
+    expect(stats.players.find((p) => p.name === 'Alice')!.trajectory).toEqual([1, 1]);
+    expect(stats.players.find((p) => p.name === 'Bob')!.trajectory).toEqual([2, 2]);
+  });
+
+  it('tracks a lead changing hands', () => {
+    // Bob takes round 1; Alice overhauls him in round 2.
+    // Note overPar(4) and worse score nothing at all off a 15 playing
+    // handicap — net +3 on every hole — so the losing cards use overPar(2).
+    const stats = build([R1, R2], [ALICE, BOB], [
+      ...card(1, 1, overPar(6)), // 0 points
+      ...card(1, 2, overPar(2)), // 15 points
+      ...card(2, 1, overPar(0)), // 51 points
+      ...card(2, 2, overPar(9)), // 0 points
+    ]);
+
+    const alice = stats.players.find((p) => p.name === 'Alice')!;
+    const bob = stats.players.find((p) => p.name === 'Bob')!;
+    expect(alice.trajectory).toEqual([2, 1]);
+    expect(bob.trajectory).toEqual([1, 2]);
+  });
+
+  it('is cumulative, not per round', () => {
+    // Bob banks a huge round 1 then does nothing. A per-round chart would put
+    // him level in round 2; a cumulative one keeps him ahead.
+    const stats = build([R1, R2], [ALICE, BOB], [
+      ...card(1, 1, overPar(9)),
+      ...card(1, 2, overPar(0)),
+      ...card(2, 1, overPar(4)),
+      ...card(2, 2, overPar(4)),
+    ]);
+
+    expect(stats.players.find((p) => p.name === 'Bob')!.trajectory).toEqual([1, 1]);
+    expect(stats.players.find((p) => p.name === 'Alice')!.trajectory).toEqual([2, 2]);
+  });
+
+  it('shares a position on a tie, as the leaderboard does', () => {
+    const stats = build([R1], [ALICE, BOB], [
+      ...card(1, 1, overPar(2)),
+      ...card(1, 2, overPar(2)),
+    ]);
+    expect(stats.players.map((p) => p.trajectory)).toEqual([[1], [1]]);
+  });
+
+  it('skips a round nobody has entered rather than drawing a flat leg', () => {
+    const stats = build([R1, R2], [ALICE, BOB], [
+      ...card(1, 1, overPar(0)),
+      ...card(1, 2, overPar(4)),
+    ]);
+
+    expect(stats.scoredRounds).toBe(1);
+    for (const player of stats.players) {
+      expect(player.trajectory).toHaveLength(1);
+    }
+  });
+
+  it('places a player with no cards last without breaking the chart', () => {
+    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0 };
+    const stats = build([R1], [ALICE, BOB, carol], [
+      ...card(1, 1, overPar(0)), // 51 points
+      ...card(1, 2, overPar(2)), // 15 points
+    ]);
+
+    expect(stats.players.find((p) => p.name === 'Carol')!.trajectory).toEqual([3]);
+  });
+
+  it('ties a scoreless card with a player who has no card at all', () => {
+    // overPar(4) earns nothing off this handicap, so both sit on zero and
+    // share the position rather than one being arbitrarily ahead.
+    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0 };
+    const stats = build([R1], [ALICE, BOB, carol], [
+      ...card(1, 1, overPar(0)),
+      ...card(1, 2, overPar(4)),
+    ]);
+
+    expect(stats.players.find((p) => p.name === 'Bob')!.trajectory).toEqual([2]);
+    expect(stats.players.find((p) => p.name === 'Carol')!.trajectory).toEqual([2]);
+  });
+
+  it('has no trajectory at all before anything is played', () => {
+    const stats = build([], [ALICE], []);
+    expect(stats.scoredRounds).toBe(0);
+    expect(stats.players[0]!.trajectory).toEqual([]);
+  });
+});
+
 describe('buildTripStats · rounds and problems', () => {
   it('summarises each round with its par and low scorer', () => {
     const stats = build([R1], [ALICE, BOB], [

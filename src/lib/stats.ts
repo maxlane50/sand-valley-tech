@@ -45,6 +45,13 @@ export interface PlayerStats {
   longestPointStreak: number;
   /** Earned label such as "best par 5s". Null when the player has no claim. */
   tag: { text: string; tone: 'good' | 'bad' } | null;
+  /**
+   * Standing after each round that has been played — one entry per scored
+   * round, cumulative, 1 = leading. This is the shape of their trip, which a
+   * cumulative total cannot show: 3rd on the way up and 3rd on the way down
+   * look identical on the leaderboard.
+   */
+  trajectory: number[];
 }
 
 export interface GroupStats {
@@ -93,6 +100,8 @@ export interface TripStats {
   easiest: HoleDifficulty[];
   /** How many holes the ranking covers, e.g. 72 after four full rounds. */
   holesRanked: number;
+  /** Rounds with at least one card in. Trajectories have this many points. */
+  scoredRounds: number;
   superlatives: Superlative[];
   rounds: RoundLine[];
   problems: string[];
@@ -197,6 +206,8 @@ export function buildTripStats(
   const roundLines: RoundLine[] = [];
   /** playerId -> round points, for the best-single-round superlative. */
   const roundPoints: { playerId: number; name: string; points: number; roundNumber: number; courseName: string }[] = [];
+  /** Points every player took from each round, including zero for a no-show. */
+  const perRoundPoints: { scored: boolean; points: Map<number, number> }[] = [];
 
   for (const [index, round] of ordered.entries()) {
     const grid = buildRoundGrid(
@@ -210,8 +221,10 @@ export function buildTripStats(
     if (grid.problem) problems.push(grid.problem);
 
     let low: { name: string; points: number } | null = null;
+    const roundTally = new Map<number, number>();
 
     for (const player of grid.players) {
+      roundTally.set(player.playerId, player.entered > 0 ? player.total.points : 0);
       if (player.problem) problems.push(player.problem);
       if (player.entered === 0) continue;
 
@@ -243,6 +256,11 @@ export function buildTripStats(
       }
     }
 
+    perRoundPoints.push({
+      scored: grid.players.some((p) => p.entered > 0),
+      points: roundTally,
+    });
+
     roundLines.push({
       roundId: grid.roundId,
       number: grid.number,
@@ -251,6 +269,27 @@ export function buildTripStats(
       low,
       problem: grid.problem,
     });
+  }
+
+  /* ─── trajectory ───────────────────────────────────────────────────────── */
+
+  // Standings recomputed after each scored round, so the shape of the race is
+  // visible rather than just its finishing order. Unplayed rounds are skipped
+  // entirely — a flat segment for a round nobody has entered would be a lie.
+  const scored = perRoundPoints.filter((round) => round.scored);
+  const trajectories = new Map<number, number[]>(players.map((p) => [p.id, []]));
+  const running = new Map<number, number>(players.map((p) => [p.id, 0]));
+
+  for (const round of scored) {
+    for (const player of players) {
+      running.set(player.id, running.get(player.id)! + (round.points.get(player.id) ?? 0));
+    }
+    const totals = [...running.values()];
+    for (const player of players) {
+      const mine = running.get(player.id)!;
+      // Standard competition ranking, matching the leaderboard.
+      trajectories.get(player.id)!.push(1 + totals.filter((t) => t > mine).length);
+    }
   }
 
   /* ─── per player ───────────────────────────────────────────────────────── */
@@ -267,6 +306,7 @@ export function buildTripStats(
       counts: countScores(mine),
       longestPointStreak: longestStreak(mine),
       tag: null as PlayerStats['tag'],
+      trajectory: trajectories.get(player.id) ?? [],
     };
   });
 
@@ -391,6 +431,7 @@ export function buildTripStats(
     hardest: byActual.slice(0, 3).map(strip),
     easiest: byActual.slice(-3).reverse().map(strip),
     holesRanked: difficulty.length,
+    scoredRounds: scored.length,
     superlatives,
     rounds: roundLines,
     problems: [...new Set(problems)],
