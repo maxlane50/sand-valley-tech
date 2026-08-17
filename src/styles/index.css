@@ -21,6 +21,21 @@
   .letterpress-dark {
     text-shadow: var(--letterpress-dark);
   }
+
+  /* Course marks, printed onto the stock rather than pasted on top of it.
+     Each logo arrives as a square on pure white; multiply drops that white
+     straight through to the paper underneath, so no tile edge is visible and
+     the ink picks up the cream. Only safe over light ground — over --turf-deep
+     it would crush the marks to black. */
+  .logo-print {
+    mix-blend-mode: multiply;
+  }
+
+  /* A day already played. Filters apply before the element is blended, so
+     this still prints correctly. */
+  .logo-spent {
+    filter: grayscale(1) opacity(0.45);
+  }
 }
 
 /* The save stamp: ink pressed onto the card, then a rule drawn under it.

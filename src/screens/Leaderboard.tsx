@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { Notice } from '../components/Notice';
+import { ScheduleStrip } from '../components/ScheduleStrip';
 import { TRIP } from '../config/trip';
 import { getCourse } from '../data/courses';
 import { buildLeaderboard, type LeaderRow, type Movement } from '../lib/leaderboard';
@@ -269,6 +270,7 @@ export function Leaderboard() {
   return (
     <>
       <Header dateline={dateline} />
+      <ScheduleStrip />
 
       <div className="flex-none grid grid-cols-board gap-2 border-b border-rule bg-paper px-gutter pt-2 pb-2 font-ui text-nano font-bold uppercase tracking-label-2 text-ink-45">
         <div>Pos</div>

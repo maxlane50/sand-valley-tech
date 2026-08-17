@@ -144,6 +144,13 @@
      nameplate at --fs-display over the total at --fs-num-xl. */
   --champion-h:112px;
 
+  /* The schedule strip under the masthead. Three days sit above the board, so
+     the row is deliberately shorter than --row-h — shrink --sched-h if you
+     want more of the field visible without scrolling. The mark is inset
+     within the row rather than filling it. */
+  --sched-h:40px;
+  --logo-w:32px;
+
   /* Motion. Long enough to read as deliberate, short enough not to be waited on. */
   --ease-settle:cubic-bezier(0.2, 0.8, 0.2, 1);
   --dur-reorder:520ms;

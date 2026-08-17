@@ -108,6 +108,8 @@ export default {
       'cell-col': 'var(--cell-col)',
       'spark-h': 'var(--spark-h)',
       'champion-h': 'var(--champion-h)',
+      'sched-h': 'var(--sched-h)',
+      'logo-w': 'var(--logo-w)',
       app: 'var(--app-h)',
       'pos-col': 'var(--pos-col)',
       'pts-col': 'var(--pts-col)',
