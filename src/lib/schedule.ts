@@ -57,23 +57,3 @@ export function formatDay(iso: string): { weekday: string; date: string } {
     date: `${MONTHS[date.getMonth()]!} ${date.getDate()}`,
   };
 }
-
-/**
- * One line for where the trip is: a countdown before it, a day marker during,
- * and nothing to count afterwards.
- */
-export function tripStatus(dates: readonly string[], today: Date): string {
-  if (dates.length === 0) return '';
-
-  const days = [...dates].sort();
-  const toFirst = daysBetween(today, parseDate(days[0]!));
-  if (toFirst > 0) return toFirst === 1 ? 'Tomorrow' : `${toFirst} days out`;
-
-  const fromLast = daysBetween(parseDate(days[days.length - 1]!), today);
-  if (fromLast > 0) return 'Complete';
-
-  const index = days.findIndex((day) => dayState(day, today) === 'today');
-  // Mid-trip but not on a scheduled day — only reachable if the dates skip a
-  // day, which this trip's don't.
-  return index === -1 ? 'Underway' : `Day ${index + 1} of ${days.length}`;
-}

@@ -2,14 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { SCHEDULE } from '../config/schedule';
 import { COURSES } from '../data/courses';
-import {
-  dayState,
-  daysBetween,
-  formatDay,
-  parseDate,
-  startOfDay,
-  tripStatus,
-} from './schedule';
+import { dayState, daysBetween, formatDay, parseDate, startOfDay } from './schedule';
 
 /** Local wall-clock time, which is what the schedule is compared against. */
 const at = (
@@ -19,8 +12,6 @@ const at = (
   hour = 12,
   minute = 0,
 ): Date => new Date(year, month - 1, day, hour, minute);
-
-const TRIP_DATES = ['2026-09-11', '2026-09-12', '2026-09-13'] as const;
 
 describe('parseDate', () => {
   it('reads an ISO date as local midnight, not UTC midnight', () => {
@@ -82,37 +73,6 @@ describe('dayState', () => {
     const duringRound2 = at(2026, 9, 12);
     expect(dayState('2026-09-11', duringRound2)).toBe('past');
     expect(dayState('2026-09-13', duringRound2)).toBe('upcoming');
-  });
-});
-
-describe('tripStatus', () => {
-  it('counts down before the trip', () => {
-    expect(tripStatus(TRIP_DATES, at(2026, 8, 17))).toBe('25 days out');
-  });
-
-  it('says Tomorrow rather than "1 days out"', () => {
-    expect(tripStatus(TRIP_DATES, at(2026, 9, 10))).toBe('Tomorrow');
-  });
-
-  it('marks the day within the trip', () => {
-    expect(tripStatus(TRIP_DATES, at(2026, 9, 11))).toBe('Day 1 of 3');
-    expect(tripStatus(TRIP_DATES, at(2026, 9, 13, 23, 30))).toBe('Day 3 of 3');
-  });
-
-  it('is complete the day after the last round', () => {
-    expect(tripStatus(TRIP_DATES, at(2026, 9, 14))).toBe('Complete');
-  });
-
-  it('reads a gap day mid-trip without claiming a round is being played', () => {
-    expect(tripStatus(['2026-09-11', '2026-09-13'], at(2026, 9, 12))).toBe('Underway');
-  });
-
-  it('sorts the dates, so the countdown is to the first day however it is written', () => {
-    expect(tripStatus(['2026-09-13', '2026-09-11'], at(2026, 9, 10))).toBe('Tomorrow');
-  });
-
-  it('says nothing when there is no schedule', () => {
-    expect(tripStatus([], at(2026, 9, 10))).toBe('');
   });
 });
 

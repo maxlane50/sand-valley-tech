@@ -1,6 +1,6 @@
 import { getCourse } from '../data/courses';
 import { SCHEDULE, type ScheduleDay } from '../config/schedule';
-import { dayState, formatDay, tripStatus, type DayState } from '../lib/schedule';
+import { dayState, formatDay, type DayState } from '../lib/schedule';
 
 /** The name comes from courses.json, so it always matches the round detail. */
 function courseName(courseId: string): string {
@@ -76,20 +76,10 @@ export function ScheduleStrip({ today = new Date() }: { today?: Date }) {
   if (SCHEDULE.length === 0) return null;
 
   return (
-    <section className="flex-none border-b border-rule bg-paper-2 px-gutter pt-2 pb-1">
-      <div className="flex items-baseline justify-between gap-2 pb-1">
-        <span className="font-ui text-pico font-bold uppercase tracking-eyebrow text-ink-45">
-          The Schedule
-        </span>
-        <span className="flex-none font-num text-pico uppercase text-ink-45">
-          {tripStatus(
-            SCHEDULE.map((day) => day.date),
-            today,
-          )}
-        </span>
-      </div>
-
-      <ol className="-mx-gutter border-t border-rule">
+    <section className="flex-none border-b border-rule bg-paper-2">
+      {/* No heading and no rule of its own: the masthead's border closes off
+          the block above, so the first day starts straight underneath it. */}
+      <ol>
         {SCHEDULE.map((day) => (
           <Day key={day.date} day={day} state={dayState(day.date, today)} />
         ))}
