@@ -28,6 +28,7 @@ export function CardPicker({
   onPickRound,
   onPickPlayer,
   onManagePlayers,
+  onManageTees,
 }: {
   rounds: readonly RoundRecord[];
   players: readonly PlayerRecord[];
@@ -36,6 +37,7 @@ export function CardPicker({
   onPickRound: (id: number | null) => void;
   onPickPlayer: (id: number) => void;
   onManagePlayers: () => void;
+  onManageTees: () => void;
 }) {
   const round = rounds.find((r) => r.id === roundId) ?? null;
 
@@ -100,6 +102,17 @@ export function CardPicker({
             className="min-h-hit-min font-ui text-nano font-bold uppercase tracking-label text-turf"
           >
             ◀ {courseFor(round.course_id)?.name ?? round.course_id} · {round.tee_name}
+          </button>
+
+          <button
+            type="button"
+            onClick={onManageTees}
+            className="flex min-h-hit-min w-full items-center justify-between gap-3 border-b border-rule-soft py-3 text-left"
+          >
+            <span className="font-ui text-nano font-bold uppercase tracking-label text-turf">
+              Tees for this round
+            </span>
+            <span className="flex-none font-num text-chip text-ink-45">▶</span>
           </button>
 
           {players.map((player) => {

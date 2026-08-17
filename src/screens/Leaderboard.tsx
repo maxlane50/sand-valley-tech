@@ -4,6 +4,7 @@ import { Notice } from '../components/Notice';
 import { TRIP } from '../config/trip';
 import { getCourse } from '../data/courses';
 import { buildLeaderboard, type LeaderRow, type Movement } from '../lib/leaderboard';
+import { buildTeeMap } from '../lib/tees';
 import { useCountUp, useFlipReorder } from '../hooks/useMotion';
 import { useTrip } from '../hooks/useTrip';
 
@@ -220,6 +221,7 @@ export function Leaderboard() {
           return undefined;
         }
       },
+      buildTeeMap(state.data.playerTees),
     );
   }, [state]);
 

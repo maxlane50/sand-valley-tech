@@ -39,6 +39,20 @@ create table if not exists scores (
 
 create index if not exists scores_round_idx on scores (round_id);
 
+-- Per-player tee for a round, for when the field splits. Absent means the
+-- player is on the round's own tee_name, so a uniform round needs no rows here.
+--
+-- Nothing else changes: the course handicap formula already carries a
+-- (rating - par) term precisely so players off different tees compete level.
+-- A back tee simply yields a bigger course handicap.
+create table if not exists player_tees (
+  round_id  bigint not null references rounds (id) on delete cascade,
+  player_id bigint not null references players (id) on delete cascade,
+  -- Must match a tee `name` on that round's course in courses.json.
+  tee_name  text not null,
+  primary key (round_id, player_id)
+);
+
 -- ─── Row level security ────────────────────────────────────────────────────
 -- Read-only for the world, and that is deliberate.
 --
@@ -56,14 +70,17 @@ create index if not exists scores_round_idx on scores (round_id);
 --
 -- Seeding below runs in the SQL editor, which also bypasses RLS.
 
-alter table players enable row level security;
-alter table rounds  enable row level security;
-alter table scores  enable row level security;
+alter table players     enable row level security;
+alter table rounds      enable row level security;
+alter table scores      enable row level security;
+alter table player_tees enable row level security;
 
-drop policy if exists "public read players" on players;
-drop policy if exists "public read rounds"  on rounds;
-drop policy if exists "public read scores"  on scores;
+drop policy if exists "public read players"     on players;
+drop policy if exists "public read rounds"      on rounds;
+drop policy if exists "public read scores"      on scores;
+drop policy if exists "public read player_tees" on player_tees;
 
-create policy "public read players" on players for select to anon, authenticated using (true);
-create policy "public read rounds"  on rounds  for select to anon, authenticated using (true);
-create policy "public read scores"  on scores  for select to anon, authenticated using (true);
+create policy "public read players"     on players     for select to anon, authenticated using (true);
+create policy "public read rounds"      on rounds      for select to anon, authenticated using (true);
+create policy "public read scores"      on scores      for select to anon, authenticated using (true);
+create policy "public read player_tees" on player_tees for select to anon, authenticated using (true);

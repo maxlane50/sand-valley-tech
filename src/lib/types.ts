@@ -24,8 +24,16 @@ export interface ScoreRecord {
   strokes: number | null;
 }
 
+/** Overrides the round's tee for one player. Absent means the round default. */
+export interface PlayerTeeRecord {
+  round_id: number;
+  player_id: number;
+  tee_name: string;
+}
+
 export interface TripData {
   players: PlayerRecord[];
   rounds: RoundRecord[];
   scores: ScoreRecord[];
+  playerTees: PlayerTeeRecord[];
 }

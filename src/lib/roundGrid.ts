@@ -13,6 +13,7 @@ import {
   strokesFromRows,
 } from '../scoring/scoring';
 import type { Course, Hole, HoleResult } from '../scoring/types';
+import { resolveTee, type TeeMap } from './tees';
 import type { PlayerRecord, RoundRecord, ScoreRecord } from './types';
 
 const FRONT_NINE = 9;
@@ -35,6 +36,8 @@ export interface GridPlayer {
   handicapIndex: number;
   courseHandicap: number;
   playingHandicap: number;
+  /** The tee this player actually played, resolved from any override. */
+  teeName: string;
   /** 18 entries in hole order; `strokes: null` means no score entered. */
   holes: HoleResult[];
   entered: number;
@@ -111,6 +114,7 @@ export function buildRoundGrid(
   course: Course | undefined,
   players: readonly PlayerRecord[],
   scores: readonly ScoreRecord[],
+  teeOverrides?: TeeMap,
 ): RoundGrid {
   const labels = shortLabels(players.map((p) => p.name));
 
@@ -144,11 +148,13 @@ export function buildRoundGrid(
 
   const gridPlayers: GridPlayer[] = players.map((player, index) => {
     const label = labels[index]!;
+    const teeName = resolveTee(teeOverrides, round, player.id);
     const base = {
       playerId: player.id,
       name: player.name,
       label,
       handicapIndex: Number(player.handicap_index),
+      teeName,
     };
 
     const empty = (playerProblem: string | null): GridPlayer => {
@@ -174,7 +180,7 @@ export function buildRoundGrid(
     try {
       result = scoreRound(
         playable,
-        round.tee_name,
+        teeName,
         Number(player.handicap_index),
         strokesFromRows(rows),
       );

@@ -4,6 +4,7 @@ import { Notice } from '../components/Notice';
 import { getCourse } from '../data/courses';
 import { useTrip } from '../hooks/useTrip';
 import { buildRoundGrid, orderRounds, type GridPlayer, type Subtotal } from '../lib/roundGrid';
+import { buildTeeMap } from '../lib/tees';
 import type { HoleResult } from '../scoring/types';
 
 /**
@@ -104,7 +105,14 @@ export function RoundDetail() {
     } catch {
       course = undefined;
     }
-    return buildRoundGrid(round, index + 1, course, state.data.players, state.data.scores);
+    return buildRoundGrid(
+      round,
+      index + 1,
+      course,
+      state.data.players,
+      state.data.scores,
+      buildTeeMap(state.data.playerTees),
+    );
   }, [state, rounds, activeId]);
 
   if (state.status === 'unconfigured') {
@@ -144,6 +152,11 @@ export function RoundDetail() {
     ...(grid.problem ? [grid.problem] : []),
     ...grid.players.map((p) => p.problem).filter((p): p is string => p !== null),
   ];
+
+  // Only name the tee per column when the field actually split; otherwise the
+  // round header says it once and the columns stay two lines.
+  const teesInRound = new Set(grid.players.map((p) => p.teeName));
+  const mixedTees = teesInRound.size > 1;
 
   const front = grid.holes.slice(0, 9);
   const back = grid.holes.slice(9);
@@ -203,7 +216,8 @@ export function RoundDetail() {
           {grid.courseName}
         </div>
         <div className="font-num text-chip text-ink-45">
-          {grid.teeName} · par {grid.parTotal || '–'} · {grid.date}
+          {mixedTees ? `${teesInRound.size} tees` : grid.teeName} · par{' '}
+          {grid.parTotal || '–'} · {grid.date}
         </div>
       </header>
 
@@ -251,7 +265,7 @@ export function RoundDetail() {
                 <div
                   key={player.playerId}
                   className="flex flex-col items-center justify-center py-1"
-                  title={`${player.name} · playing handicap ${player.playingHandicap}`}
+                  title={`${player.name} · ${player.teeName} tees · playing handicap ${player.playingHandicap}`}
                 >
                   <span className="truncate font-ui text-nano font-bold uppercase tracking-nav text-ink">
                     {player.label}
@@ -259,6 +273,11 @@ export function RoundDetail() {
                   <span className="font-num text-pico leading-none text-ink-45">
                     {player.playingHandicap}
                   </span>
+                  {mixedTees ? (
+                    <span className="w-full truncate text-center font-ui text-tiny font-bold uppercase tracking-nav text-turf">
+                      {player.teeName}
+                    </span>
+                  ) : null}
                 </div>
               ))}
             </div>

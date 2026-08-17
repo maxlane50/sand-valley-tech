@@ -8,6 +8,7 @@
 
 import type { Course } from '../scoring/types';
 import { buildRoundGrid, orderRounds } from './roundGrid';
+import type { TeeMap } from './tees';
 import type { PlayerRecord, RoundRecord, ScoreRecord } from './types';
 
 /** The hole types the splits are reported over. */
@@ -199,6 +200,7 @@ export function buildTripStats(
   players: readonly PlayerRecord[],
   scores: readonly ScoreRecord[],
   lookupCourse: (courseId: string) => Course | undefined,
+  teeOverrides?: TeeMap,
 ): TripStats {
   const ordered = orderRounds(rounds);
   const problems: string[] = [];
@@ -216,6 +218,7 @@ export function buildTripStats(
       lookupCourse(round.course_id),
       players,
       scores,
+      teeOverrides,
     );
 
     if (grid.problem) problems.push(grid.problem);

@@ -13,6 +13,7 @@ import {
   scoreRound,
   strokesFromRows,
 } from '../scoring/scoring';
+import { resolveTee, type TeeMap } from './tees';
 import type { PlayerRecord, RoundRecord, ScoreRecord } from './types';
 
 export type Movement = 'leader' | 'up' | 'down' | 'same';
@@ -83,6 +84,7 @@ export function buildLeaderboard(
   rounds: readonly RoundRecord[],
   scores: readonly ScoreRecord[],
   lookupCourse: (courseId: string) => Course | undefined,
+  teeOverrides?: TeeMap,
 ): Leaderboard {
   const ordered = [...rounds].sort(
     (a, b) => a.date.localeCompare(b.date) || a.id - b.id,
@@ -146,7 +148,7 @@ export function buildLeaderboard(
       try {
         result = scoreRound(
           course,
-          round.tee_name,
+          resolveTee(teeOverrides, round, player.id),
           Number(player.handicap_index),
           strokesFromRows(playerScores),
         );

@@ -6,7 +6,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { saveCard, savePlayers, verifyPin } from './handlers';
+import { saveCard, savePlayers, saveTees, verifyPin } from './handlers';
 
 const PIN = '246813';
 const VALID = Array.from({ length: 18 }, () => 4); // gross 72
@@ -314,5 +314,78 @@ describe('savePlayers', () => {
       client(),
     );
     expect(result.status).toBe(404);
+  });
+});
+
+describe('saveTees', () => {
+  function stub(courseId = 'lido') {
+    fetchMock.mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('/rounds?id=eq.') && u.includes('select=')) {
+        return ok([{ id: 1, course_id: courseId }]);
+      }
+      return ok();
+    });
+  }
+
+  const body = (overrides: Record<string, unknown> = {}) => ({
+    pin: PIN,
+    roundId: 1,
+    defaultTee: 'White',
+    assignments: [{ playerId: 1, teeName: 'White' }],
+    ...overrides,
+  });
+
+  beforeEach(() => stub());
+
+  it('refuses without a valid PIN', async () => {
+    expect((await saveTees(body({ pin: 'no' }), client())).status).toBe(401);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('replaces the round assignments wholesale', async () => {
+    const result = await saveTees(body(), client());
+    expect(result.status).toBe(200);
+    const del = fetchMock.mock.calls.find(([, i]) => i?.method === 'DELETE');
+    expect(String(del![0])).toContain('player_tees?round_id=eq.1');
+    const post = fetchMock.mock.calls.find(
+      ([u, i]) => i?.method === 'POST' && String(u).includes('player_tees'),
+    );
+    expect(JSON.parse(post![1].body)).toEqual([
+      { round_id: 1, player_id: 1, tee_name: 'White' },
+    ]);
+  });
+
+  it('rejects a tee that is not on the card, before touching anything', async () => {
+    const result = await saveTees(
+      body({ assignments: [{ playerId: 1, teeName: 'Gold' }] }),
+      client(),
+    );
+    expect(result.status).toBe(422);
+    expect(result.body.error).toMatch(/no tee named "Gold"/);
+    expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'DELETE')).toBe(false);
+  });
+
+  it('rejects a default tee that is not on the card', async () => {
+    expect((await saveTees(body({ defaultTee: 'Gold' }), client())).status).toBe(422);
+  });
+
+  it('refuses a course with no tees filled in yet', async () => {
+    stub('sedge-valley');
+    const result = await saveTees(body(), client());
+    expect(result.status).toBe(422);
+    expect(result.body.error).toMatch(/no tees in courses.json/);
+  });
+
+  it('404s on an unknown round', async () => {
+    fetchMock.mockImplementation(async () => ok([]));
+    expect((await saveTees(body(), client())).status).toBe(404);
+  });
+
+  it('updates the round default tee', async () => {
+    await saveTees(body(), client());
+    const patch = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH');
+    expect(String(patch![0])).toContain('rounds?id=eq.1');
+    expect(JSON.parse(patch![1].body)).toEqual({ tee_name: 'White' });
   });
 });

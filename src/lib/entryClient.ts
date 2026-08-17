@@ -68,6 +68,15 @@ export function savePlayers(input: {
   );
 }
 
+export function saveTees(input: {
+  pin: string;
+  roundId: number;
+  defaultTee: string;
+  assignments: { playerId: number; teeName: string }[];
+}) {
+  return post<{ ok: true; assigned: number }>('/api/save-tees', input);
+}
+
 /* ─── PIN storage ─────────────────────────────────────────────────────────
    sessionStorage, so it clears when the tab closes. This is a convenience
    gate on the UI — the PIN is checked server-side on every write, which is

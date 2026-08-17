@@ -16,6 +16,10 @@
 
 import { createHash, timingSafeEqual } from 'node:crypto';
 
+// The course cards are static repo data, so the server can validate a tee name
+// against the same file the browser scores from.
+import courses from '../../src/data/courses.json' with { type: 'json' };
+
 const HOLES = 18;
 /** Nobody makes 20 on a hole and still writes it down. Guards typos and abuse. */
 const MAX_STROKES = 20;
@@ -157,6 +161,100 @@ async function exists(
   }
   const rows = (await response.json()) as unknown[];
   return Array.isArray(rows) && rows.length > 0;
+}
+
+/* ─── POST /api/save-tees ────────────────────────────────────────────────── */
+
+export interface SaveTeesBody {
+  pin: string;
+  roundId: number;
+  /** The round's own tee, used by anyone without an assignment. */
+  defaultTee: string;
+  assignments: { playerId: number; teeName: string }[];
+}
+
+/**
+ * Replaces the tee assignments for one round.
+ *
+ * Tee names are checked against courses.json here rather than trusted, because
+ * a name that isn't on the card would score fine on save and then break that
+ * player's whole round at read time.
+ */
+export async function saveTees(body: unknown, client: string): Promise<ApiResult> {
+  const { pin, roundId, defaultTee, assignments } = (body ?? {}) as Partial<SaveTeesBody>;
+
+  const failure = checkPin(pin, client);
+  if (failure) return failure;
+
+  if (!Number.isInteger(roundId)) return fail(400, 'roundId must be an integer.');
+  if (typeof defaultTee !== 'string' || !defaultTee.trim()) {
+    return fail(400, 'The round needs a default tee.');
+  }
+  if (!Array.isArray(assignments)) return fail(400, 'assignments must be an array.');
+
+  const config = getConfig();
+  if ('error' in config) return fail(500, config.error);
+
+  const roundResponse = await postgrest(
+    config,
+    `rounds?id=eq.${roundId}&select=id,course_id&limit=1`,
+    { method: 'GET' },
+  );
+  if (!roundResponse.ok) {
+    return fail(500, `Could not read rounds: ${await roundResponse.text()}`);
+  }
+  const round = ((await roundResponse.json()) as { id: number; course_id: string }[])[0];
+  if (!round) return fail(404, `No round with id ${roundId}.`);
+
+  const course = (courses as { id: string; name: string; tees: { name: string }[] }[]).find(
+    (c) => c.id === round.course_id,
+  );
+  if (!course) {
+    return fail(422, `Round ${roundId} points at course "${round.course_id}", which is not in courses.json.`);
+  }
+  const valid = new Set(course.tees.map((t) => t.name.toLowerCase()));
+  if (valid.size === 0) {
+    return fail(422, `${course.name} has no tees in courses.json yet.`);
+  }
+
+  const check = (tee: string) => valid.has(tee.trim().toLowerCase());
+  if (!check(defaultTee)) {
+    return fail(422, `${course.name} has no tee named "${defaultTee}". On the card: ${course.tees.map((t) => t.name).join(', ')}.`);
+  }
+
+  const rows: { round_id: number; player_id: number; tee_name: string }[] = [];
+  for (const entry of assignments) {
+    if (!Number.isInteger(entry?.playerId)) return fail(400, 'playerId must be an integer.');
+    const tee = typeof entry?.teeName === 'string' ? entry.teeName.trim() : '';
+    if (!check(tee)) {
+      return fail(422, `${course.name} has no tee named "${tee}". On the card: ${course.tees.map((t) => t.name).join(', ')}.`);
+    }
+    rows.push({ round_id: roundId as number, player_id: entry.playerId, tee_name: tee });
+  }
+
+  const patch = await postgrest(config, `rounds?id=eq.${roundId}`, {
+    method: 'PATCH',
+    body: { tee_name: defaultTee.trim() },
+    prefer: 'return=minimal',
+  });
+  if (!patch.ok) return fail(500, `Could not update the round tee: ${await patch.text()}`);
+
+  // Replace wholesale, so unassigning someone actually removes their row.
+  const cleared = await postgrest(config, `player_tees?round_id=eq.${roundId}`, {
+    method: 'DELETE',
+  });
+  if (!cleared.ok) return fail(500, `Could not clear tees: ${await cleared.text()}`);
+
+  if (rows.length > 0) {
+    const inserted = await postgrest(config, 'player_tees', {
+      method: 'POST',
+      body: rows,
+      prefer: 'return=minimal',
+    });
+    if (!inserted.ok) return fail(500, `Could not save tees: ${await inserted.text()}`);
+  }
+
+  return { status: 200, body: { ok: true, assigned: rows.length } };
 }
 
 /* ─── POST /api/save-players ─────────────────────────────────────────────── */

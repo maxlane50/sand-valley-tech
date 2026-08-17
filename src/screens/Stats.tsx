@@ -10,6 +10,7 @@ import { TRIP } from '../config/trip';
 import { getCourse } from '../data/courses';
 import { useTrip } from '../hooks/useTrip';
 import { buildTripStats } from '../lib/stats';
+import { buildTeeMap } from '../lib/tees';
 
 /**
  * Sections A-D follow design.html's stats screen. Two things are additions:
@@ -32,6 +33,7 @@ export function Stats() {
           return undefined;
         }
       },
+      buildTeeMap(state.data.playerTees),
     );
   }, [state]);
 

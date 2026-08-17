@@ -4,11 +4,13 @@ import { CardEntry } from '../components/entry/CardEntry';
 import { CardPicker } from '../components/entry/CardPicker';
 import { PinGate } from '../components/entry/PinGate';
 import { PlayersEditor } from '../components/entry/PlayersEditor';
+import { TeeEditor } from '../components/entry/TeeEditor';
 import { Notice } from '../components/Notice';
 import { getCourse } from '../data/courses';
 import { useTrip } from '../hooks/useTrip';
 import { emptyCard } from '../lib/entryCard';
 import { clearPin, loadPin } from '../lib/entryClient';
+import { buildTeeMap, resolveTee } from '../lib/tees';
 import type { ScoreRecord } from '../lib/types';
 import { HOLES_PER_ROUND } from '../scoring/scoring';
 
@@ -33,7 +35,12 @@ export function Enter() {
   const [pin, setPin] = useState<string | null>(() => loadPin());
   const [roundId, setRoundId] = useState<number | null>(null);
   const [playerId, setPlayerId] = useState<number | null>(null);
-  const [view, setView] = useState<'rounds' | 'players'>('rounds');
+  const [view, setView] = useState<'rounds' | 'players' | 'tees'>('rounds');
+
+  const teeOverrides = useMemo(
+    () => (state.status === 'ready' ? buildTeeMap(state.data.playerTees) : buildTeeMap([])),
+    [state],
+  );
 
   /** Holes already saved per player for the chosen round. */
   const entered = useMemo(() => {
@@ -75,9 +82,10 @@ export function Enter() {
       roundNumber: index + 1,
       player,
       course,
+      teeName: resolveTee(teeOverrides, round, player.id),
       strokes: existingCard(state.data.scores, round.id, player.id),
     };
-  }, [state, roundId, playerId]);
+  }, [state, roundId, playerId, teeOverrides]);
 
   if (!pin) {
     return <PinGate onUnlock={setPin} />;
@@ -116,6 +124,29 @@ export function Enter() {
   }
 
   if (!selection) {
+    const rounds = [...state.data.rounds].sort(
+      (a, b) => a.date.localeCompare(b.date) || a.id - b.id,
+    );
+    const index = rounds.findIndex((r) => r.id === roundId);
+
+    if (view === 'tees' && index >= 0) {
+      return (
+        <TeeEditor
+          round={rounds[index]!}
+          roundNumber={index + 1}
+          players={state.data.players}
+          teeOverrides={teeOverrides}
+          pin={pin}
+          onBack={() => setView('rounds')}
+          onSaved={refresh}
+          onPinRejected={() => {
+            clearPin();
+            setPin(null);
+          }}
+        />
+      );
+    }
+
     if (view === 'players') {
       return (
         <PlayersEditor
@@ -143,6 +174,7 @@ export function Enter() {
         onPickRound={setRoundId}
         onPickPlayer={setPlayerId}
         onManagePlayers={() => setView('players')}
+        onManageTees={() => setView('tees')}
       />
     );
   }
@@ -156,6 +188,7 @@ export function Enter() {
       roundNumber={selection.roundNumber}
       player={selection.player}
       players={state.data.players}
+      teeName={selection.teeName}
       entered={entered}
       initialStrokes={selection.strokes}
       pin={pin}
