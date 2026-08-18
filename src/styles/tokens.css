@@ -151,6 +151,12 @@
   --sched-h:40px;
   --logo-w:32px;
 
+  /* Player photos. Three sizes only: a board row, the champion block, and the
+     stats table. Each is a circle, so one value covers width and height. */
+  --avatar-row:28px;
+  --avatar-lead:48px;
+  --avatar-stat:22px;
+
   /* Motion. Long enough to read as deliberate, short enough not to be waited on. */
   --ease-settle:cubic-bezier(0.2, 0.8, 0.2, 1);
   --dur-reorder:520ms;

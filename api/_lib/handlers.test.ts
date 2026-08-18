@@ -6,7 +6,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { saveCard, savePlayers, saveTees, verifyPin } from './handlers';
+import { saveCard, savePhoto, savePlayers, saveTees, verifyPin } from './handlers';
 
 const PIN = '246813';
 const VALID = Array.from({ length: 18 }, () => 4); // gross 72
@@ -428,5 +428,88 @@ describe('saveTees', () => {
     const patch = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH');
     expect(String(patch![0])).toContain('rounds?id=eq.1');
     expect(JSON.parse(patch![1].body)).toEqual({ tee_name: 'White' });
+  });
+});
+
+describe('savePhoto', () => {
+  /** The three bytes every JPEG starts with, then a scrap of payload. */
+  const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]).toString('base64');
+  const jpegUrl = `data:image/jpeg;base64,${JPEG}`;
+  const body = (overrides: Record<string, unknown> = {}) => ({
+    pin: PIN,
+    playerId: 1,
+    dataUrl: jpegUrl,
+    ...overrides,
+  });
+
+  it('refuses without a valid PIN', async () => {
+    expect((await savePhoto(body({ pin: 'no' }), client())).status).toBe(401);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('uploads to the player\'s own object path, with upsert', async () => {
+    const result = await savePhoto(body(), client());
+    expect(result.status).toBe(200);
+
+    const upload = fetchMock.mock.calls.find(([u]) => String(u).includes('/storage/v1/'));
+    expect(String(upload![0])).toBe(
+      'https://example.supabase.co/storage/v1/object/avatars/1.jpg',
+    );
+    expect(upload![1].method).toBe('POST');
+    expect(upload![1].headers['content-type']).toBe('image/jpeg');
+    // Without upsert, a second photo for the same player would 409.
+    expect(upload![1].headers['x-upsert']).toBe('true');
+  });
+
+  it('sends the decoded bytes, not the base64 text', async () => {
+    await savePhoto(body(), client());
+    const upload = fetchMock.mock.calls.find(([u]) => String(u).includes('/storage/v1/'));
+    const sent = new Uint8Array(upload![1].body);
+    expect([...sent.slice(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+  });
+
+  it('404s rather than orphaning a photo under a player who does not exist', async () => {
+    fetchMock.mockImplementation(async (url: string) =>
+      String(url).includes('select=id') ? ok([]) : ok(),
+    );
+    const result = await savePhoto(body({ playerId: 99 }), client());
+    expect(result.status).toBe(404);
+    expect(fetchMock.mock.calls.some(([u]) => String(u).includes('/storage/'))).toBe(false);
+  });
+
+  it('rejects a file that is not a JPEG, whatever the data URL claims', async () => {
+    const png = `data:image/jpeg;base64,${Buffer.from([0x89, 0x50, 0x4e, 0x47]).toString('base64')}`;
+    const result = await savePhoto(body({ dataUrl: png }), client());
+    expect(result.status).toBe(422);
+    expect(result.body.error).toMatch(/not a JPEG/);
+  });
+
+  it('rejects a PNG data URL outright', async () => {
+    expect((await savePhoto(body({ dataUrl: 'data:image/png;base64,AAEC' }), client())).status).toBe(422);
+  });
+
+  it('rejects a photo that was never resized', async () => {
+    const huge = `data:image/jpeg;base64,${Buffer.alloc(500_000, 1).toString('base64')}`;
+    const result = await savePhoto(body({ dataUrl: huge }), client());
+    expect(result.status).toBe(413);
+  });
+
+  it('removes the photo when dataUrl is null', async () => {
+    const result = await savePhoto(body({ dataUrl: null }), client());
+    expect(result.status).toBe(200);
+    const del = fetchMock.mock.calls.find(([, i]) => i?.method === 'DELETE');
+    expect(String(del![0])).toContain('/storage/v1/object/avatars/1.jpg');
+  });
+
+  it('treats removing a photo that was never there as done', async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      if (String(url).includes('select=id')) return ok([{ id: 1 }]);
+      return { ok: false, status: 404, json: async () => ({}), text: async () => 'not found' };
+    });
+    expect((await savePhoto(body({ dataUrl: null }), client())).status).toBe(200);
+  });
+
+  it('rejects a playerId that is not an integer', async () => {
+    expect((await savePhoto(body({ playerId: 'one' }), client())).status).toBe(400);
   });
 });

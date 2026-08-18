@@ -1,3 +1,4 @@
+import { Avatar } from '../Avatar';
 import type { GroupStats, HoleTypeStat, PlayerStats } from '../../lib/stats';
 import { SECTION_LETTER, averageClass, pointsTint, signed } from './format';
 
@@ -49,20 +50,23 @@ export function ByHoleType({
           key={player.playerId}
           className="grid grid-cols-hole-type items-center gap-2 border-b border-rule-soft py-2"
         >
-          <div className="min-w-0">
-            <div className="truncate font-display text-body leading-name text-ink">
-              {player.name}
-            </div>
-            <div
-              className={`truncate font-ui text-pico font-bold uppercase tracking-nav ${
-                player.tag
-                  ? player.tag.tone === 'good'
-                    ? 'text-turf'
-                    : 'text-flag'
-                  : 'text-ink-45'
-              }`}
-            >
-              {player.tag ? player.tag.text : `hcp ${player.handicapIndex.toFixed(1)}`}
+          <div className="flex min-w-0 items-center gap-2">
+            <Avatar playerId={player.playerId} name={player.name} size="stat" />
+            <div className="min-w-0">
+              <div className="truncate font-display text-body leading-name text-ink">
+                {player.name}
+              </div>
+              <div
+                className={`truncate font-ui text-pico font-bold uppercase tracking-nav ${
+                  player.tag
+                    ? player.tag.tone === 'good'
+                      ? 'text-turf'
+                      : 'text-flag'
+                    : 'text-ink-45'
+                }`}
+              >
+                {player.tag ? player.tag.text : `hcp ${player.handicapIndex.toFixed(1)}`}
+              </div>
             </div>
           </div>
           {player.byType.map((stat) => (

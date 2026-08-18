@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 
+import { Avatar } from '../components/Avatar';
 import { Notice } from '../components/Notice';
 import { ScheduleStrip } from '../components/ScheduleStrip';
 import { TRIP } from '../config/trip';
@@ -76,12 +77,15 @@ function ChampionRow({
       </div>
 
       <div className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <div className="letterpress-dark truncate font-display text-display leading-tight text-paper">
-            {row.name}
-          </div>
-          <div className="truncate font-ui text-nano font-semibold uppercase tracking-nav text-fescue">
-            hcp {row.handicapIndex.toFixed(1)} · gross {row.grossTotal ?? '–'}
+        <div className="flex min-w-0 items-center gap-2">
+          <Avatar playerId={row.playerId} name={row.name} size="lead" tone="dark" />
+          <div className="min-w-0">
+            <div className="letterpress-dark truncate font-display text-display leading-tight text-paper">
+              {row.name}
+            </div>
+            <div className="truncate font-ui text-nano font-semibold uppercase tracking-nav text-fescue">
+              hcp {row.handicapIndex.toFixed(1)} · gross {row.grossTotal ?? '–'}
+            </div>
           </div>
         </div>
         <div className="flex flex-none items-end gap-2">
@@ -146,23 +150,31 @@ function Row({
         </span>
       </div>
 
-      <div className="min-w-0">
-        <div
-          className={[
-            'truncate font-display leading-name',
-            isLeader
-              ? 'letterpress-dark text-name-lead text-paper'
-              : 'letterpress text-name text-ink',
-          ].join(' ')}
-        >
-          {row.name}
-        </div>
-        <div
-          className={`truncate font-ui text-nano font-semibold uppercase tracking-nav ${
-            isLeader ? 'text-fescue' : 'text-ink-45'
-          }`}
-        >
-          hcp {row.handicapIndex.toFixed(1)} · gross {row.grossTotal ?? '–'}
+      <div className="flex min-w-0 items-center gap-2">
+        <Avatar
+          playerId={row.playerId}
+          name={row.name}
+          size="row"
+          tone={isLeader ? 'dark' : 'light'}
+        />
+        <div className="min-w-0">
+          <div
+            className={[
+              'truncate font-display leading-name',
+              isLeader
+                ? 'letterpress-dark text-name-lead text-paper'
+                : 'letterpress text-name text-ink',
+            ].join(' ')}
+          >
+            {row.name}
+          </div>
+          <div
+            className={`truncate font-ui text-nano font-semibold uppercase tracking-nav ${
+              isLeader ? 'text-fescue' : 'text-ink-45'
+            }`}
+          >
+            hcp {row.handicapIndex.toFixed(1)} · gross {row.grossTotal ?? '–'}
+          </div>
         </div>
       </div>
 

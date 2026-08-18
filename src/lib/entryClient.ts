@@ -68,6 +68,15 @@ export function savePlayers(input: {
   );
 }
 
+/** `dataUrl` null removes the photo. */
+export function savePhoto(input: {
+  pin: string;
+  playerId: number;
+  dataUrl: string | null;
+}) {
+  return post<{ ok: true; bytes?: number; removed?: boolean }>('/api/save-photo', input);
+}
+
 export function saveTees(input: {
   pin: string;
   roundId: number;

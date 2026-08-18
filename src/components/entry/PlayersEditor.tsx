@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-import { savePlayers } from '../../lib/entryClient';
+import { Avatar } from '../Avatar';
+import { savePhoto, savePlayers } from '../../lib/entryClient';
+import { toAvatarJpeg } from '../../lib/resizeImage';
 import type { PlayerRecord } from '../../lib/types';
 
 /**
@@ -20,6 +22,74 @@ interface Draft {
   /** Kept as a string so the field can be empty or mid-typing. */
   index: string;
   locked: boolean;
+}
+
+/**
+ * The photo button for one saved player.
+ *
+ * Photos are uploaded on their own, the moment one is picked, rather than
+ * riding along with Save players — an unsaved player has no id yet, and the id
+ * is the only thing a photo is filed under. Bumping `version` after an upload
+ * is what makes the new photo appear immediately instead of when the CDN cache
+ * lets go of the old one.
+ */
+function PhotoButton({
+  playerId,
+  name,
+  pin,
+  onPinRejected,
+  onError,
+}: {
+  playerId: number;
+  name: string;
+  pin: string;
+  onPinRejected: () => void;
+  onError: (message: string) => void;
+}) {
+  const input = useRef<HTMLInputElement>(null);
+  const [version, setVersion] = useState<number | undefined>(undefined);
+  const [busy, setBusy] = useState(false);
+
+  async function pick(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const dataUrl = await toAvatarJpeg(file);
+      const result = await savePhoto({ pin, playerId, dataUrl });
+      if (!result.ok) {
+        if (result.failure.status === 401) return onPinRejected();
+        return onError(result.failure.error);
+      }
+      setVersion(Date.now());
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'That photo could not be read.');
+    } finally {
+      setBusy(false);
+      // Clear the input so picking the same file twice still fires a change.
+      if (input.current) input.current.value = '';
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => input.current?.click()}
+        disabled={busy}
+        aria-label={`Photo for ${name || 'this player'}`}
+        className="relative flex-none rounded-full disabled:opacity-45"
+      >
+        <Avatar playerId={playerId} name={name} size="lead" version={version} />
+      </button>
+      <input
+        ref={input}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(event) => void pick(event.target.files?.[0])}
+      />
+    </>
+  );
 }
 
 function toDraft(player: PlayerRecord, locked: boolean): Draft {
@@ -126,23 +196,43 @@ export function PlayersEditor({
       </header>
 
       <div className="px-gutter pt-3 pb-2">
-        <div className="grid grid-cols-players gap-2 pb-1 font-ui text-nano font-bold uppercase tracking-label-3 text-ink-45">
-          <div>Name</div>
-          <div className="text-right">Index</div>
-          <div />
+        <div className="flex items-baseline gap-2 pb-1 font-ui text-nano font-bold uppercase tracking-label-3 text-ink-45">
+          <div className="w-avatar-lead flex-none">Photo</div>
+          <div className="min-w-0 flex-1">Name</div>
+          <div className="w-rounds-col flex-none text-right">Index</div>
+          <div className="w-cell-col flex-none" />
         </div>
 
         {drafts.map((draft, index) => (
           <div
             key={draft.id ?? `new-${index}`}
-            className="grid grid-cols-players items-center gap-2 border-b border-rule-soft py-2"
+            className="flex items-center gap-2 border-b border-rule-soft py-2"
           >
+            {draft.id === undefined ? (
+              // No id yet, and the id is the only thing a photo is filed
+              // under. Save the player first, then their photo has somewhere
+              // to go.
+              <div
+                title="Save this player first, then add a photo"
+                className="flex h-avatar-lead w-avatar-lead flex-none items-center justify-center rounded-full border border-dashed border-rule-strong font-ui text-nano font-bold uppercase tracking-nav text-ink-25"
+              >
+                +
+              </div>
+            ) : (
+              <PhotoButton
+                playerId={draft.id}
+                name={draft.name}
+                pin={pin}
+                onPinRejected={onPinRejected}
+                onError={(message) => setStatus({ phase: 'error', message })}
+              />
+            )}
             <input
               value={draft.name}
               onChange={(event) => update(index, { name: event.target.value })}
               aria-label={`Player ${index + 1} name`}
               placeholder="Name"
-              className={`${inputClass} font-display text-name`}
+              className={`${inputClass} min-w-0 flex-1 font-display text-name`}
             />
             <input
               value={draft.index}
@@ -153,14 +243,14 @@ export function PlayersEditor({
               }
               aria-label={`Player ${index + 1} handicap index`}
               title={draft.locked ? 'Locked — this player has already posted a score' : undefined}
-              className={`${inputClass} text-right font-num text-num-m`}
+              className={`${inputClass} w-rounds-col flex-none text-right font-num text-num-m`}
             />
             <button
               type="button"
               onClick={() => remove(index)}
               disabled={draft.locked}
               aria-label={`Remove ${draft.name || 'player'}`}
-              className="min-h-hit-min font-num text-micro text-flag disabled:text-ink-25"
+              className="min-h-hit-min w-cell-col flex-none font-num text-micro text-flag disabled:text-ink-25"
             >
               {draft.locked ? '🔒' : '✕'}
             </button>
@@ -181,7 +271,8 @@ export function PlayersEditor({
         <p className="pt-2 font-display text-list italic leading-body text-ink-45">
           A negative index is a plus handicap. Once someone posts a score their
           index locks, because every screen recomputes from it — changing one
-          later would rewrite rounds already played.
+          later would rewrite rounds already played. Tap a photo to change it;
+          photos save on their own, not with the button below.
         </p>
 
         <div className="flex items-center justify-between gap-3 pt-3">

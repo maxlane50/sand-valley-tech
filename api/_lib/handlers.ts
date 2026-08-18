@@ -19,6 +19,13 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 // The course cards are static repo data, so the server can validate a tee name
 // against the same file the browser scores from.
 import courses from '../../src/data/courses.json' with { type: 'json' };
+// Photo paths and the JPEG data-URL parser are shared with the browser, so
+// both ends agree on where a player's photo lives without a column to sync.
+import {
+  AVATAR_BUCKET,
+  avatarObjectPath,
+  base64FromDataUrl,
+} from '../../src/lib/avatars.js';
 
 const HOLES = 18;
 /** Nobody makes 20 on a hole and still writes it down. Guards typos and abuse. */
@@ -480,4 +487,113 @@ export async function saveCard(body: unknown, client: string): Promise<ApiResult
   }
 
   return { status: 200, body: { ok: true, grossTotal } };
+}
+
+/* ─── POST /api/save-photo ───────────────────────────────────────────────── */
+
+export interface SavePhotoBody {
+  pin?: unknown;
+  playerId?: unknown;
+  /** `data:image/jpeg;base64,...`, or null to remove the photo. */
+  dataUrl?: unknown;
+}
+
+/**
+ * A 256px JPEG is comfortably under 40KB. The bucket itself caps objects at
+ * 1MB; this rejects earlier and with a sentence rather than a storage error.
+ */
+const MAX_PHOTO_BYTES = 400_000;
+
+/**
+ * One request to Supabase Storage. Same service-role key as PostgREST, and
+ * the same reason it must stay server-side.
+ */
+async function storage(
+  config: PostgrestConfig,
+  path: string,
+  init: { method: string; body?: ArrayBuffer; contentType?: string; upsert?: boolean },
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    apikey: config.serviceKey,
+    authorization: `Bearer ${config.serviceKey}`,
+  };
+  if (init.contentType) headers['content-type'] = init.contentType;
+  if (init.upsert) headers['x-upsert'] = 'true';
+
+  return fetch(`${config.url}/storage/v1/${path}`, {
+    method: init.method,
+    headers,
+    body: init.body,
+  });
+}
+
+export async function savePhoto(body: unknown, client: string): Promise<ApiResult> {
+  const { pin, playerId, dataUrl } = (body ?? {}) as SavePhotoBody;
+
+  const pinFailure = checkPin(pin, client);
+  if (pinFailure) return pinFailure;
+
+  if (!Number.isInteger(playerId)) return fail(400, 'playerId must be an integer.');
+
+  const config = getConfig();
+  if ('error' in config) return fail(500, config.error);
+
+  // A photo for a player who does not exist would be an orphan object that
+  // nothing can ever show or delete through the UI.
+  const lookup = await postgrest(
+    config,
+    `players?id=eq.${playerId as number}&select=id&limit=1`,
+    { method: 'GET' },
+  );
+  if (!lookup.ok) return fail(500, `Could not read players: ${await lookup.text()}`);
+  if (((await lookup.json()) as unknown[]).length === 0) {
+    return fail(404, `No player with id ${playerId}.`);
+  }
+
+  const object = `object/${AVATAR_BUCKET}/${avatarObjectPath(playerId as number)}`;
+
+  if (dataUrl === null) {
+    const removed = await storage(config, object, { method: 'DELETE' });
+    // A player with no photo is already in the state being asked for.
+    if (!removed.ok && removed.status !== 404 && removed.status !== 400) {
+      return fail(500, `Could not remove the photo: ${await removed.text()}`);
+    }
+    return { status: 200, body: { ok: true, removed: true } };
+  }
+
+  if (typeof dataUrl !== 'string') {
+    return fail(400, 'dataUrl must be a JPEG data URL, or null to remove the photo.');
+  }
+
+  const base64 = base64FromDataUrl(dataUrl);
+  if (!base64) {
+    return fail(422, 'That is not a JPEG. Photos are converted in the browser before upload.');
+  }
+
+  // A plain Uint8Array, not a Buffer: fetch's BodyInit accepts an
+  // ArrayBufferView, and Node's Buffer subtype does not line up with it.
+  const bytes = Uint8Array.from(Buffer.from(base64, 'base64'));
+  if (bytes.length === 0) return fail(422, 'That photo is empty.');
+  if (bytes.length > MAX_PHOTO_BYTES) {
+    return fail(413, 'That photo is too large. It should have been resized before upload.');
+  }
+  // JPEG starts FF D8 FF. Checks the bytes rather than trusting the prefix.
+  if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) {
+    return fail(422, 'That file is not a JPEG.');
+  }
+
+  // fetch wants a BufferSource. Copying into a real ArrayBuffer keeps this
+  // free of casts and of assumptions about how Node types its Buffer.
+  const payload = new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(payload).set(bytes);
+
+  const uploaded = await storage(config, object, {
+    method: 'POST',
+    body: payload,
+    contentType: 'image/jpeg',
+    upsert: true,
+  });
+  if (!uploaded.ok) return fail(500, `Could not save the photo: ${await uploaded.text()}`);
+
+  return { status: 200, body: { ok: true, bytes: bytes.length } };
 }
