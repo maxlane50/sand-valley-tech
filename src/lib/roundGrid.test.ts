@@ -131,14 +131,14 @@ describe('buildRoundGrid', () => {
 
   it('reports a stub course once and leaves the grid empty rather than throwing', () => {
     const grid = buildRoundGrid(
-      { ...LIDO_ROUND, course_id: 'sedge-valley' },
+      { ...LIDO_ROUND, course_id: 'mammoth-dunes' },
       2,
-      getCourse('sedge-valley'),
+      getCourse('mammoth-dunes'),
       PLAYERS,
       [],
     );
 
-    expect(grid.problem).toMatch(/Sedge Valley.*par is null/s);
+    expect(grid.problem).toMatch(/Mammoth Dunes.*par is null/s);
     expect(grid.holes).toEqual([]);
     expect(grid.players).toHaveLength(2);
     expect(grid.players[0]!.holes).toEqual([]);

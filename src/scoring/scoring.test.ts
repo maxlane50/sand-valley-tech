@@ -52,8 +52,9 @@ describe('the Lido card in courses.json', () => {
     expect(getTee(LIDO, WHITE)).toMatchObject({ rating: 72.5, slope: 144 });
   });
 
-  it('puts si 1, 2 and 3 on holes 4, 12 and 6', () => {
-    expect([holeAtSi(1), holeAtSi(2), holeAtSi(3)]).toEqual([4, 12, 6]);
+  // Channel, Punch Bowl and Hog's Back, per the Hcp row on the printed card.
+  it('puts si 1, 2 and 3 on holes 4, 12 and 7', () => {
+    expect([holeAtSi(1), holeAtSi(2), holeAtSi(3)]).toEqual([4, 12, 7]);
   });
 });
 
@@ -78,9 +79,9 @@ describe('roundHalfAwayFromZero', () => {
 
 describe('unplayable courses', () => {
   it('throws a course-specific error when par is null', () => {
-    const stub = getCourse('sedge-valley');
+    const stub = getCourse('mammoth-dunes');
     expect(stub.par).toBeNull();
-    expect(() => assertPlayableCourse(stub)).toThrowError(/Sedge Valley.*par is null/s);
+    expect(() => assertPlayableCourse(stub)).toThrowError(/Mammoth Dunes.*par is null/s);
     expect(() => assertPlayableCourse(stub)).toThrowError(/courses\.json/);
   });
 
@@ -117,16 +118,16 @@ describe('handicap calculation on the Lido White (72.5 / 144, par 72)', () => {
     expect(ph).toBe(3);
   });
 
-  it('HI 2.0 takes strokes on holes 4, 12 and 6 and nowhere else', () => {
-    expect(holesWithStrokes(2.0)).toEqual([4, 12, 6]);
+  it('HI 2.0 takes strokes on holes 4, 12 and 7 and nowhere else', () => {
+    expect(holesWithStrokes(2.0)).toEqual([4, 12, 7]);
 
     const allocation = strokeAllocation(LIDO, 3);
     expect(allocation.get(4)).toBe(1);
     expect(allocation.get(12)).toBe(1);
-    expect(allocation.get(6)).toBe(1);
+    expect(allocation.get(7)).toBe(1);
     // Every other hole is a straight gross-vs-par hole.
     for (const hole of LIDO.holes) {
-      if (![4, 12, 6].includes(hole.hole)) {
+      if (![4, 12, 7].includes(hole.hole)) {
         expect(allocation.get(hole.hole)).toBe(0);
       }
     }

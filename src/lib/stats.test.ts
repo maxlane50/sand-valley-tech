@@ -467,13 +467,13 @@ describe('buildTripStats · rounds and problems', () => {
     const stub: RoundRecord = {
       id: 3,
       date: '2026-08-15',
-      course_id: 'sedge-valley',
+      course_id: 'mammoth-dunes',
       tee_name: 'White',
     };
     const stats = build([R1, stub], [ALICE], card(1, 1, overPar(0)));
 
     expect(stats.problems).toHaveLength(1);
-    expect(stats.problems[0]).toMatch(/Sedge Valley.*par is null/s);
+    expect(stats.problems[0]).toMatch(/Mammoth Dunes.*par is null/s);
     expect(stats.rounds[1]!.par).toBeNull();
     expect(stats.holesRanked).toBe(18); // only the Lido contributes
     expect(stats.players[0]!.holesPlayed).toBe(18);

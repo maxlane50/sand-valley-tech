@@ -82,8 +82,8 @@ describe('buildEntryCard', () => {
   });
 
   it('throws for a course that has not been filled in', () => {
-    expect(() => buildEntryCard(getCourse('sedge-valley'), WHITE, 12, emptyCard())).toThrowError(
-      /Sedge Valley.*par is null/s,
+    expect(() => buildEntryCard(getCourse('mammoth-dunes'), WHITE, 12, emptyCard())).toThrowError(
+      /Mammoth Dunes.*par is null/s,
     );
   });
 });

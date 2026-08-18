@@ -4,35 +4,63 @@
     "name": "The Lido",
     "par": 72,
     "tees": [
-      { "name": "White", "rating": 72.5, "slope": 144, "yards": 6504 }
+      { "name": "Navy",  "rating": 75.2, "slope": 149, "yards": 6990 },
+      { "name": "White", "rating": 72.5, "slope": 144, "yards": 6504 },
+      { "name": "Green", "rating": 69.6, "slope": 134, "yards": 5943 }
     ],
     "holes": [
       { "hole": 1,  "par": 4, "si": 11, "yards": 375 },
-      { "hole": 2,  "par": 4, "si": 7,  "yards": 393 },
+      { "hole": 2,  "par": 4, "si": 9,  "yards": 393 },
       { "hole": 3,  "par": 3, "si": 15, "yards": 158 },
       { "hole": 4,  "par": 5, "si": 1,  "yards": 529 },
       { "hole": 5,  "par": 4, "si": 13, "yards": 335 },
-      { "hole": 6,  "par": 5, "si": 3,  "yards": 457 },
-      { "hole": 7,  "par": 5, "si": 5,  "yards": 471 },
-      { "hole": 8,  "par": 3, "si": 9,  "yards": 212 },
+      { "hole": 6,  "par": 5, "si": 5,  "yards": 457 },
+      { "hole": 7,  "par": 5, "si": 3,  "yards": 471 },
+      { "hole": 8,  "par": 3, "si": 7,  "yards": 212 },
       { "hole": 9,  "par": 4, "si": 17, "yards": 336 },
-      { "hole": 10, "par": 4, "si": 6,  "yards": 392 },
-      { "hole": 11, "par": 4, "si": 8,  "yards": 425 },
+      { "hole": 10, "par": 4, "si": 8,  "yards": 392 },
+      { "hole": 11, "par": 4, "si": 10, "yards": 425 },
       { "hole": 12, "par": 4, "si": 2,  "yards": 412 },
       { "hole": 13, "par": 4, "si": 16, "yards": 318 },
       { "hole": 14, "par": 3, "si": 18, "yards": 128 },
-      { "hole": 15, "par": 4, "si": 10, "yards": 386 },
-      { "hole": 16, "par": 3, "si": 12, "yards": 201 },
+      { "hole": 15, "par": 4, "si": 14, "yards": 386 },
+      { "hole": 16, "par": 3, "si": 6,  "yards": 201 },
       { "hole": 17, "par": 5, "si": 4,  "yards": 552 },
-      { "hole": 18, "par": 4, "si": 14, "yards": 424 }
+      { "hole": 18, "par": 4, "si": 12, "yards": 424 }
     ]
   },
   {
     "id": "sand-valley",
     "name": "Sand Valley",
-    "par": null,
-    "tees": [],
-    "holes": []
+    "par": 72,
+    "tees": [
+      { "name": "Black",      "rating": 74.5, "slope": 140, "yards": 6959 },
+      { "name": "Orange",     "rating": 72.8, "slope": 138, "yards": 6551 },
+      { "name": "Sand",       "rating": 70.2, "slope": 129, "yards": 6023 },
+      { "name": "Green",      "rating": 67.4, "slope": 123, "yards": 5440 },
+      { "name": "Silver",     "rating": 63.9, "slope": 113, "yards": 4664 },
+      { "name": "Royal Blue", "rating": 60.8, "slope": 100, "yards": 3871 }
+    ],
+    "holes": [
+      { "hole": 1,  "par": 4, "si": 9,  "yards": 295 },
+      { "hole": 2,  "par": 4, "si": 7,  "yards": 384 },
+      { "hole": 3,  "par": 3, "si": 13, "yards": 170 },
+      { "hole": 4,  "par": 5, "si": 1,  "yards": 516 },
+      { "hole": 5,  "par": 3, "si": 15, "yards": 148 },
+      { "hole": 6,  "par": 4, "si": 5,  "yards": 412 },
+      { "hole": 7,  "par": 5, "si": 3,  "yards": 511 },
+      { "hole": 8,  "par": 3, "si": 17, "yards": 97  },
+      { "hole": 9,  "par": 4, "si": 11, "yards": 273 },
+      { "hole": 10, "par": 5, "si": 2,  "yards": 500 },
+      { "hole": 11, "par": 4, "si": 12, "yards": 327 },
+      { "hole": 12, "par": 5, "si": 6,  "yards": 458 },
+      { "hole": 13, "par": 4, "si": 8,  "yards": 339 },
+      { "hole": 14, "par": 3, "si": 18, "yards": 153 },
+      { "hole": 15, "par": 4, "si": 14, "yards": 372 },
+      { "hole": 16, "par": 4, "si": 10, "yards": 410 },
+      { "hole": 17, "par": 3, "si": 16, "yards": 180 },
+      { "hole": 18, "par": 5, "si": 4,  "yards": 478 }
+    ]
   },
   {
     "id": "mammoth-dunes",
@@ -44,8 +72,31 @@
   {
     "id": "sedge-valley",
     "name": "Sedge Valley",
-    "par": null,
-    "tees": [],
-    "holes": []
+    "par": 68,
+    "tees": [
+      { "name": "Back",   "rating": 68.7, "slope": 130, "yards": 5808 },
+      { "name": "Middle", "rating": 63.9, "slope": 112, "yards": 4790 },
+      { "name": "Front",  "rating": 60.2, "slope": 100, "yards": 3753 }
+    ],
+    "holes": [
+      { "hole": 1,  "par": 4, "si": 13, "yards": 361 },
+      { "hole": 2,  "par": 4, "si": 9,  "yards": 365 },
+      { "hole": 3,  "par": 4, "si": 1,  "yards": 455 },
+      { "hole": 4,  "par": 4, "si": 3,  "yards": 413 },
+      { "hole": 5,  "par": 3, "si": 7,  "yards": 151 },
+      { "hole": 6,  "par": 4, "si": 15, "yards": 288 },
+      { "hole": 7,  "par": 3, "si": 17, "yards": 138 },
+      { "hole": 8,  "par": 3, "si": 11, "yards": 226 },
+      { "hole": 9,  "par": 4, "si": 5,  "yards": 343 },
+      { "hole": 10, "par": 4, "si": 8,  "yards": 403 },
+      { "hole": 11, "par": 5, "si": 2,  "yards": 540 },
+      { "hole": 12, "par": 4, "si": 14, "yards": 278 },
+      { "hole": 13, "par": 3, "si": 18, "yards": 157 },
+      { "hole": 14, "par": 4, "si": 6,  "yards": 387 },
+      { "hole": 15, "par": 3, "si": 16, "yards": 185 },
+      { "hole": 16, "par": 4, "si": 4,  "yards": 408 },
+      { "hole": 17, "par": 4, "si": 10, "yards": 393 },
+      { "hole": 18, "par": 4, "si": 12, "yards": 317 }
+    ]
   }
 ]

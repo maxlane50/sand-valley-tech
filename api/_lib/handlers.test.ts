@@ -371,7 +371,7 @@ describe('saveTees', () => {
   });
 
   it('refuses a course with no tees filled in yet', async () => {
-    stub('sedge-valley');
+    stub('mammoth-dunes');
     const result = await saveTees(body(), client());
     expect(result.status).toBe(422);
     expect(result.body.error).toMatch(/no tees in courses.json/);

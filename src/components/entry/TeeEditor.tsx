@@ -76,8 +76,11 @@ export function TeeEditor({
     );
   }
 
+  // Chips size to their label and wrap. Sand Valley has six tees, one of them
+  // called Royal Blue — a single row of equal shares runs off the side of a
+  // phone long before that fits.
   const chip = (active: boolean) =>
-    `min-h-hit-min flex-1 rounded-sm px-1 font-ui text-nano font-bold uppercase tracking-nav ${
+    `min-h-hit-min rounded-sm px-3 font-ui text-nano font-bold uppercase tracking-nav ${
       active ? 'bg-turf-deep text-paper' : 'bg-paper-2 text-ink-45'
     }`;
 
@@ -128,7 +131,7 @@ export function TeeEditor({
         <div className="pb-1 font-ui text-nano font-bold uppercase tracking-label text-ink-45">
           Round default
         </div>
-        <div className="flex gap-1 pb-3">
+        <div className="flex flex-wrap gap-1 pb-3">
           {teeNames.map((tee) => (
             <button
               key={tee}
@@ -149,14 +152,13 @@ export function TeeEditor({
         </div>
 
         {players.map((player) => (
-          <div
-            key={player.id}
-            className="flex items-center gap-2 border-b border-rule-soft py-2"
-          >
-            <span className="min-w-0 flex-1 truncate font-display text-name text-ink">
+          <div key={player.id} className="border-b border-rule-soft py-2">
+            {/* Name over its own chips rather than beside them: with six tees
+                there is no room left on the line for a name as well. */}
+            <div className="truncate font-display text-name leading-name text-ink">
               {player.name}
-            </span>
-            <span className="flex flex-none gap-1">
+            </div>
+            <div className="flex flex-wrap gap-1 pt-1">
               {teeNames.map((tee) => (
                 <button
                   key={tee}
@@ -166,12 +168,12 @@ export function TeeEditor({
                     setAssigned((current) => ({ ...current, [player.id]: tee }));
                   }}
                   aria-label={`${player.name} off ${tee}`}
-                  className={`${chip((assigned[player.id] ?? defaultTee) === tee)} px-2`}
+                  className={chip((assigned[player.id] ?? defaultTee) === tee)}
                 >
                   {tee}
                 </button>
               ))}
-            </span>
+            </div>
           </div>
         ))}
 
