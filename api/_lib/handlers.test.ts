@@ -377,6 +377,47 @@ describe('saveTees', () => {
     expect(result.body.error).toMatch(/no tees in courses.json/);
   });
 
+  it('explains the missing migration instead of forwarding PostgREST JSON', async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('/rounds?id=eq.') && u.includes('select=')) {
+        return ok([{ id: 1, course_id: 'lido' }]);
+      }
+      // What PostgREST answers for a table that isn't in its schema cache.
+      return {
+        ok: false,
+        status: 404,
+        json: async () => ({}),
+        text: async () =>
+          '{"code":"PGRST205","message":"Could not find the table ' +
+          "'public.player_tees' in the schema cache\"}",
+      };
+    });
+
+    const result = await saveTees(body(), client());
+    expect(result.status).toBe(503);
+    expect(result.body.error).toMatch(/supabase\/schema\.sql/);
+    expect(result.body.error).not.toMatch(/PGRST205/);
+  });
+
+  it('leaves the round tee alone when player_tees cannot be written', async () => {
+    // Not transactional: if the round were patched first, a failure here
+    // would move the whole field onto a tee nobody had agreed to.
+    fetchMock.mockImplementation(async (url: string) => {
+      const u = String(url);
+      if (u.includes('/rounds?id=eq.') && u.includes('select=')) {
+        return ok([{ id: 1, course_id: 'lido' }]);
+      }
+      if (u.includes('player_tees')) {
+        return { ok: false, status: 404, json: async () => ({}), text: async () => 'PGRST205' };
+      }
+      return ok();
+    });
+
+    await saveTees(body({ defaultTee: 'Navy' }), client());
+    expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'PATCH')).toBe(false);
+  });
+
   it('404s on an unknown round', async () => {
     fetchMock.mockImplementation(async () => ok([]));
     expect((await saveTees(body(), client())).status).toBe(404);

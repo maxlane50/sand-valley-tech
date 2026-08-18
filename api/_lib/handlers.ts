@@ -232,18 +232,15 @@ export async function saveTees(body: unknown, client: string): Promise<ApiResult
     rows.push({ round_id: roundId as number, player_id: entry.playerId, tee_name: tee });
   }
 
-  const patch = await postgrest(config, `rounds?id=eq.${roundId}`, {
-    method: 'PATCH',
-    body: { tee_name: defaultTee.trim() },
-    prefer: 'return=minimal',
-  });
-  if (!patch.ok) return fail(500, `Could not update the round tee: ${await patch.text()}`);
-
-  // Replace wholesale, so unassigning someone actually removes their row.
+  // The per-player rows go first and the round's own tee second. Nothing here
+  // is transactional, so the order decides what a half-done save leaves
+  // behind: if player_tees is unreachable this way, nothing has changed at
+  // all. Patching the round first would have moved everybody onto a new tee
+  // and then failed.
   const cleared = await postgrest(config, `player_tees?round_id=eq.${roundId}`, {
     method: 'DELETE',
   });
-  if (!cleared.ok) return fail(500, `Could not clear tees: ${await cleared.text()}`);
+  if (!cleared.ok) return teeTableFailure('Could not clear tees', await cleared.text());
 
   if (rows.length > 0) {
     const inserted = await postgrest(config, 'player_tees', {
@@ -251,10 +248,36 @@ export async function saveTees(body: unknown, client: string): Promise<ApiResult
       body: rows,
       prefer: 'return=minimal',
     });
-    if (!inserted.ok) return fail(500, `Could not save tees: ${await inserted.text()}`);
+    if (!inserted.ok) return teeTableFailure('Could not save tees', await inserted.text());
   }
 
+  const patch = await postgrest(config, `rounds?id=eq.${roundId}`, {
+    method: 'PATCH',
+    body: { tee_name: defaultTee.trim() },
+    prefer: 'return=minimal',
+  });
+  if (!patch.ok) return fail(500, `Could not update the round tee: ${await patch.text()}`);
+
   return { status: 200, body: { ok: true, assigned: rows.length } };
+}
+
+/**
+ * PostgREST answers PGRST205 for a table that isn't in its schema cache. On
+ * player_tees that has exactly one cause worth reporting — the table has not
+ * been created — so say that instead of forwarding raw PostgREST JSON to
+ * somebody standing on a tee box.
+ */
+function teeTableFailure(what: string, detail: string) {
+  if (detail.includes('PGRST205')) {
+    return fail(
+      503,
+      'Per-player tees need the player_tees table, which this database does ' +
+        'not have yet. Run the player_tees block at the bottom of ' +
+        'supabase/schema.sql in the Supabase SQL editor. Until then everyone ' +
+        "plays the round's own tee, and scoring works normally.",
+    );
+  }
+  return fail(500, `${what}: ${detail}`);
 }
 
 /* ─── POST /api/save-players ─────────────────────────────────────────────── */
