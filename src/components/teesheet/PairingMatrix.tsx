@@ -1,6 +1,5 @@
 import { shortLabels } from '../../lib/roundGrid';
 import type { Pairings } from '../../lib/teeSheet';
-import { SECTION_LETTER } from '../stats/format';
 
 /**
  * How many rounds each pair share a group.
@@ -12,6 +11,10 @@ import { SECTION_LETTER } from '../stats/format';
  * read across, and having to work out which half of a triangle your pair falls
  * in is exactly the friction this is meant to remove. The cost is that every
  * figure appears twice, which nobody has ever noticed on a printed sheet.
+ *
+ * The grid carries its own legend: a red 0 is a pair who never go off
+ * together, and the darkest cells are the pairs who see the most of each
+ * other. Tapping a name follows them, here and everywhere above.
  */
 function cellTint(count: number, most: number): string {
   if (count === 0) return 'bg-tint-bad text-flag';
@@ -36,16 +39,10 @@ export function PairingMatrix({
   const columns = `var(--cell-col) repeat(${roster.length}, minmax(0, 1fr))`;
 
   return (
-    <section className="border-b border-rule px-gutter pt-3 pb-3">
-      <div className="flex items-baseline gap-2 pb-1">
-        <span className={SECTION_LETTER}>A</span>
-        <h2 className="font-display text-section leading-name text-ink">
-          Rounds together
-        </h2>
-      </div>
-      <p className="pb-2 font-display text-list italic leading-body text-ink-45">
-        Of the five rounds, how many each pair share a group.
-      </p>
+    <section className="border-b border-rule px-gutter pt-3 pb-4">
+      <h2 className="pb-2 font-display text-section leading-name text-ink">
+        Rounds together
+      </h2>
 
       <div className="grid items-stretch" style={{ gridTemplateColumns: columns }}>
         <div />
@@ -107,25 +104,6 @@ export function PairingMatrix({
           );
         })}
       </div>
-
-      {pairings.neverTogether.map(([a, b]) => (
-        <p key={`${a}-${b}`} className="pt-2 font-num text-chip leading-body text-ink-70">
-          <span className="text-flag">0</span> — {a} and {b} never share a group.
-        </p>
-      ))}
-
-      {pairings.players
-        .filter((player) => player.reachable < roster.length - 1)
-        .map((player) => (
-          <p
-            key={player.name}
-            className="pt-1 font-num text-chip leading-body text-ink-70"
-          >
-            {player.name} plays {player.rounds}{' '}
-            {player.rounds === 1 ? 'round' : 'rounds'}, so can meet at most{' '}
-            {player.reachable} of the other {roster.length - 1}.
-          </p>
-        ))}
     </section>
   );
 }
