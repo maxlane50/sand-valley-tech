@@ -106,6 +106,7 @@ export default {
       'key-h': 'var(--key-h)',
       'chip-w': 'var(--chip-w)',
       'cell-col': 'var(--cell-col)',
+      'time-col': 'var(--time-col)',
       'spark-h': 'var(--spark-h)',
       'champion-h': 'var(--champion-h)',
       'sched-h': 'var(--sched-h)',
@@ -155,6 +156,8 @@ export default {
         'players': '1fr var(--rounds-col) var(--cell-col)',
         // Stats D: player | sparkline | positions gained
         'trajectory': '1fr var(--rounds-col) var(--cell-col)',
+        // Tee sheet: time (or group number) | the names going off
+        'tee-group': 'var(--time-col) 1fr',
         // Stats C: player | eagles | birdies | pars | bogeys | blow-ups
         'counts':
           '1fr var(--cell-col) var(--cell-col) var(--cell-col) var(--cell-col) var(--blow-col)',

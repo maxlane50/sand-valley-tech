@@ -154,4 +154,16 @@ describe('courses still to come', () => {
       expect(isPlayableCourse(getCourse(id))).toBe(true);
     }
   });
+
+  it('carries the tee sheet side courses by name only', () => {
+    // Unlike Mammoth Dunes these are not waiting to be filled in. The Commons
+    // is twelve holes and Sandbox is a par 3 course; neither is scored, and
+    // both are here so the tee sheet can name a course the same way every
+    // other screen does. Adding a card to either would be wrong, not helpful.
+    for (const id of ['the-commons', 'sandbox']) {
+      const course = getCourse(id);
+      expect(course.par).toBeNull();
+      expect(isPlayableCourse(course)).toBe(false);
+    }
+  });
 });

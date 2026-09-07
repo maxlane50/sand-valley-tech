@@ -65,14 +65,17 @@ export interface RoundGrid {
 }
 
 /**
- * Column headings: first name, uppercased, capped at six characters.
+ * Column headings: first name, uppercased, capped at `max` characters.
  * Collisions get a numeral rather than being silently ambiguous — two players
  * sharing a column heading on a scoreboard is worse than an ugly one.
+ *
+ * Six suits a scorecard column. The tee sheet's pairing matrix passes 3, since
+ * eight names have to fit across a phone.
  */
-export function shortLabels(names: readonly string[]): string[] {
+export function shortLabels(names: readonly string[], max = 6): string[] {
   const base = names.map((name) => {
     const first = name.trim().split(/\s+/)[0] ?? '';
-    return (first || name.trim() || '?').toUpperCase().slice(0, 6);
+    return (first || name.trim() || '?').toUpperCase().slice(0, max);
   });
 
   const totals = new Map<string, number>();
@@ -83,7 +86,7 @@ export function shortLabels(names: readonly string[]): string[] {
     if ((totals.get(label) ?? 0) === 1) return label;
     const nth = (seen.get(label) ?? 0) + 1;
     seen.set(label, nth);
-    return `${label.slice(0, 5)}${nth}`;
+    return `${label.slice(0, max - 1)}${nth}`;
   });
 }
 

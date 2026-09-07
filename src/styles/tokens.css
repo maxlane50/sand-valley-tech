@@ -112,6 +112,7 @@
   --pts-col:46px;          /* leaderboard points column */
   --chip-w:16px;           /* single round chip */
   --cell-col:34px;         /* score-entry card row column */
+  --time-col:44px;         /* tee sheet: the time a group goes off */
   --type-col:52px;         /* stats: par 3 / par 4 / par 5 column */
   --blow-col:40px;         /* stats: blow-up count, hole-difficulty delta */
   --gap-hair:2px;          /* hole strip gap */

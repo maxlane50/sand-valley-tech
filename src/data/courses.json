@@ -70,6 +70,20 @@
     "holes": []
   },
   {
+    "id": "the-commons",
+    "name": "The Commons",
+    "par": null,
+    "tees": [],
+    "holes": []
+  },
+  {
+    "id": "sandbox",
+    "name": "Sandbox",
+    "par": null,
+    "tees": [],
+    "holes": []
+  },
+  {
     "id": "sedge-valley",
     "name": "Sedge Valley",
     "par": 68,
