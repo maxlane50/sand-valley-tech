@@ -195,8 +195,8 @@ describe('saveCard', () => {
 describe('savePlayers', () => {
   /** Two existing players; only Marty has posted a score. */
   const EXISTING = [
-    { id: 1, name: 'Marty D.', handicap_index: 4.0 },
-    { id: 2, name: 'Cheech', handicap_index: 8.0 },
+    { id: 1, name: 'Marty D.', handicap_index: 4.0, rating_set: 'men' },
+    { id: 2, name: 'Cheech', handicap_index: 8.0, rating_set: 'men' },
   ];
 
   function stub({ scored = [1] }: { scored?: number[] } = {}) {
@@ -238,7 +238,11 @@ describe('savePlayers', () => {
     expect(result.status).toBe(200);
     const patch = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH');
     expect(String(patch![0])).toContain('players?id=eq.2');
-    expect(JSON.parse(patch![1].body)).toEqual({ name: 'Cheech Marin', handicap_index: 7.4 });
+    expect(JSON.parse(patch![1].body)).toEqual({
+      name: 'Cheech Marin',
+      handicap_index: 7.4,
+      rating_set: 'men',
+    });
   });
 
   it('LOCKS the handicap of a player who has already posted a score', async () => {
@@ -257,6 +261,89 @@ describe('savePlayers', () => {
       client(),
     );
     expect(result.status).toBe(200);
+  });
+
+  it('stores the rating set a player is scored against', async () => {
+    const result = await savePlayers(
+      body({
+        players: [{ id: 2, name: 'Cheech', handicapIndex: 8.0, ratingSet: 'women' }],
+      }),
+      client(),
+    );
+    expect(result.status).toBe(200);
+    const patch = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH');
+    expect(JSON.parse(patch![1].body).rating_set).toBe('women');
+  });
+
+  it("LOCKS the rating set of a player who has already posted a score", async () => {
+    // Same reason the index locks: it feeds the course handicap, and every
+    // screen recomputes from it, so flipping it would rescore rounds already
+    // in the book.
+    const result = await savePlayers(
+      body({
+        players: [{ id: 1, name: 'Marty D.', handicapIndex: 4.0, ratingSet: 'women' }],
+      }),
+      client(),
+    );
+    expect(result.status).toBe(409);
+    expect(result.body.code).toBe('rating-set-locked');
+    expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'PATCH')).toBe(false);
+  });
+
+  it('lets a player with no scores change rating set', async () => {
+    const result = await savePlayers(
+      body({
+        players: [{ id: 2, name: 'Cheech', handicapIndex: 8.0, ratingSet: 'women' }],
+      }),
+      client(),
+    );
+    expect(result.status).toBe(200);
+  });
+
+  it('defaults a player with no rating set to the men\'s rating', async () => {
+    // What every player was scored off before the column existed.
+    const result = await savePlayers(
+      body({ players: [{ id: 2, name: 'Cheech', handicapIndex: 8.0 }] }),
+      client(),
+    );
+    expect(result.status).toBe(200);
+    const patch = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH');
+    expect(JSON.parse(patch![1].body).rating_set).toBe('men');
+  });
+
+  it('refuses a rating set that is not on any scorecard', async () => {
+    const result = await savePlayers(
+      body({
+        players: [{ id: 2, name: 'Cheech', handicapIndex: 8.0, ratingSet: 'seniors' }],
+      }),
+      client(),
+    );
+    expect(result.status).toBe(400);
+    expect(result.body.error).toMatch(/unknown rating set "seniors"/);
+    expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'PATCH')).toBe(false);
+  });
+
+  it('explains the missing rating_set migration instead of forwarding PostgREST JSON', async () => {
+    fetchMock.mockImplementation(async (url: string, init?: { method?: string }) => {
+      const u = String(url);
+      if (init?.method === 'GET' || init === undefined) {
+        if (u.includes('/players?select=')) return ok(EXISTING);
+        if (u.includes('/scores?select=player_id')) return ok([]);
+      }
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({}),
+        text: async () =>
+          "{\"code\":\"PGRST204\",\"message\":\"Could not find the 'rating_set' column\"}",
+      };
+    });
+
+    const result = await savePlayers(body(), client());
+    expect(result.status).toBe(503);
+    expect(result.body.code).toBe('rating-set-missing');
+    expect(result.body.error).toMatch(/supabase\/schema\.sql/);
+    expect(result.body.error).not.toMatch(/PGRST204/);
   });
 
   it('refuses to delete a player who has scores', async () => {
@@ -283,7 +370,9 @@ describe('savePlayers', () => {
     const post = fetchMock.mock.calls.find(
       ([u, i]) => i?.method === 'POST' && String(u).includes('/players'),
     );
-    expect(JSON.parse(post![1].body)).toEqual([{ name: 'Big Wes', handicap_index: 11.2 }]);
+    expect(JSON.parse(post![1].body)).toEqual([
+      { name: 'Big Wes', handicap_index: 11.2, rating_set: 'men' },
+    ]);
   });
 
   it('accepts a negative index for a plus handicap', async () => {
@@ -318,7 +407,7 @@ describe('savePlayers', () => {
 });
 
 describe('saveTees', () => {
-  function stub(courseId = 'lido') {
+  function stub(courseId = 'bandon-dunes') {
     fetchMock.mockImplementation(async (url: string) => {
       const u = String(url);
       if (u.includes('/rounds?id=eq.') && u.includes('select=')) {
@@ -331,8 +420,8 @@ describe('saveTees', () => {
   const body = (overrides: Record<string, unknown> = {}) => ({
     pin: PIN,
     roundId: 1,
-    defaultTee: 'White',
-    assignments: [{ playerId: 1, teeName: 'White' }],
+    defaultTee: 'Black',
+    assignments: [{ playerId: 1, teeName: 'Black' }],
     ...overrides,
   });
 
@@ -352,36 +441,36 @@ describe('saveTees', () => {
       ([u, i]) => i?.method === 'POST' && String(u).includes('player_tees'),
     );
     expect(JSON.parse(post![1].body)).toEqual([
-      { round_id: 1, player_id: 1, tee_name: 'White' },
+      { round_id: 1, player_id: 1, tee_name: 'Black' },
     ]);
   });
 
   it('rejects a tee that is not on the card, before touching anything', async () => {
     const result = await saveTees(
-      body({ assignments: [{ playerId: 1, teeName: 'Gold' }] }),
+      body({ assignments: [{ playerId: 1, teeName: 'Purple' }] }),
       client(),
     );
     expect(result.status).toBe(422);
-    expect(result.body.error).toMatch(/no tee named "Gold"/);
+    expect(result.body.error).toMatch(/no tee named "Purple"/);
     expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'DELETE')).toBe(false);
   });
 
   it('rejects a default tee that is not on the card', async () => {
-    expect((await saveTees(body({ defaultTee: 'Gold' }), client())).status).toBe(422);
+    expect((await saveTees(body({ defaultTee: 'Purple' }), client())).status).toBe(422);
   });
 
   it('refuses a course with no tees filled in yet', async () => {
-    stub('mammoth-dunes');
+    stub('old-macdonald');
     const result = await saveTees(body(), client());
     expect(result.status).toBe(422);
-    expect(result.body.error).toMatch(/no tees in courses.json/);
+    expect(result.body.error).toMatch(/not in courses\.json/);
   });
 
   it('explains the missing migration instead of forwarding PostgREST JSON', async () => {
     fetchMock.mockImplementation(async (url: string) => {
       const u = String(url);
       if (u.includes('/rounds?id=eq.') && u.includes('select=')) {
-        return ok([{ id: 1, course_id: 'lido' }]);
+        return ok([{ id: 1, course_id: 'bandon-dunes' }]);
       }
       // What PostgREST answers for a table that isn't in its schema cache.
       return {
@@ -406,7 +495,7 @@ describe('saveTees', () => {
     fetchMock.mockImplementation(async (url: string) => {
       const u = String(url);
       if (u.includes('/rounds?id=eq.') && u.includes('select=')) {
-        return ok([{ id: 1, course_id: 'lido' }]);
+        return ok([{ id: 1, course_id: 'bandon-dunes' }]);
       }
       if (u.includes('player_tees')) {
         return { ok: false, status: 404, json: async () => ({}), text: async () => 'PGRST205' };
@@ -414,7 +503,7 @@ describe('saveTees', () => {
       return ok();
     });
 
-    await saveTees(body({ defaultTee: 'Navy' }), client());
+    await saveTees(body({ defaultTee: 'Green' }), client());
     expect(fetchMock.mock.calls.some(([, i]) => i?.method === 'PATCH')).toBe(false);
   });
 
@@ -427,7 +516,7 @@ describe('saveTees', () => {
     await saveTees(body(), client());
     const patch = fetchMock.mock.calls.find(([, i]) => i?.method === 'PATCH');
     expect(String(patch![0])).toContain('rounds?id=eq.1');
-    expect(JSON.parse(patch![1].body)).toEqual({ tee_name: 'White' });
+    expect(JSON.parse(patch![1].body)).toEqual({ tee_name: 'Black' });
   });
 });
 

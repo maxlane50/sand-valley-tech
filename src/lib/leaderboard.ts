@@ -150,6 +150,7 @@ export function buildLeaderboard(
           course,
           resolveTee(teeOverrides, round, player.id),
           Number(player.handicap_index),
+          player.rating_set,
           strokesFromRows(playerScores),
         );
       } catch (error) {

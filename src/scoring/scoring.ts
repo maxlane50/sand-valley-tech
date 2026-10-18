@@ -1,10 +1,15 @@
 /**
- * Net Stableford scoring for the Sand Valley trip.
+ * Net Stableford scoring for the Bandon trip.
  *
  * Pure functions only: no UI, no Supabase, no I/O. Everything the leaderboard
  * shows is derived from raw strokes + the course card at read time, so fixing a
  * typo'd score or filling in a course in courses.json is all it takes to make
  * every screen correct.
+ *
+ * Two things about a card are per-player rather than per-round, and both are
+ * threaded through every function here rather than defaulted: which set of
+ * tees somebody played, and which of that tee's two course ratings they are
+ * scored against. Getting either wrong is worth strokes.
  */
 
 import type {
@@ -12,11 +17,14 @@ import type {
   Hole,
   HoleResult,
   PlayableCourse,
+  RatingSet,
   RoundResult,
   ScoreRow,
   Strokes,
   Tee,
+  TeeRating,
 } from './types';
+import { RATING_SETS } from './types';
 
 export const HOLES_PER_ROUND = 18;
 
@@ -39,6 +47,14 @@ export function roundHalfAwayFromZero(value: number): number {
   }
   const snapped = Number(value.toFixed(10));
   return snapped < 0 ? -Math.round(-snapped) : Math.round(snapped);
+}
+
+/** True when `values` uses every stroke index from 1 to 18 exactly once. */
+function isStrokeIndexRow(values: readonly number[]): boolean {
+  if (values.length !== HOLES_PER_ROUND) return false;
+  const seen = new Set(values);
+  if (seen.size !== HOLES_PER_ROUND) return false;
+  return values.every((v) => Number.isInteger(v) && v >= 1 && v <= HOLES_PER_ROUND);
 }
 
 /**
@@ -87,6 +103,28 @@ export function assertPlayableCourse(course: Course): PlayableCourse {
     throw new Error(`${where} has no tees defined in src/data/courses.json.`);
   }
 
+  // Every tee must be rated for both, because a player scored against a
+  // missing rating would silently fall back to the other one and play off a
+  // handicap several strokes out. If a card really is rated once only, that is
+  // a conversation, not a default.
+  for (const tee of course.tees) {
+    for (const set of RATING_SETS) {
+      const rated = tee[set];
+      if (!rated || !Number.isFinite(rated.rating) || !Number.isFinite(rated.slope)) {
+        throw new Error(
+          `${where} has no ${set}'s rating and slope for the ${tee.name} tees in ` +
+            `src/data/courses.json. Both are printed on the card, men's above women's.`,
+        );
+      }
+    }
+    if (tee.si !== undefined && !isStrokeIndexRow(tee.si)) {
+      throw new Error(
+        `${where} gives the ${tee.name} tees their own stroke index, but it is not ` +
+          `each of 1 to ${HOLES_PER_ROUND} exactly once. Fix src/data/courses.json.`,
+      );
+    }
+  }
+
   return course as PlayableCourse;
 }
 
@@ -114,22 +152,56 @@ export function getTee(course: PlayableCourse, teeName: string): Tee {
   return tee;
 }
 
-/** Holes sorted 1..18. */
+/** The course rating and slope this player is scored against off this tee. */
+export function ratingFor(tee: Tee, ratingSet: RatingSet): TeeRating {
+  const rated = tee[ratingSet];
+  if (!rated) {
+    // Reached when a player record carries no rating set at all, or one the
+    // card is not rated for. Both are worth naming: silently falling back to
+    // the other rating would put somebody several strokes out and look right.
+    throw new Error(
+      `The ${tee.name} tees have no ${String(ratingSet) || 'men/women'} rating in ` +
+        `src/data/courses.json, so a player scored against it cannot be given a ` +
+        `course handicap.`,
+    );
+  }
+  return rated;
+}
+
+/** Holes sorted 1..18, carrying the course's own stroke index. */
 export function holesInPlayOrder(course: PlayableCourse): Hole[] {
   return [...course.holes].sort((a, b) => a.hole - b.hole);
 }
 
 /**
+ * The 18 holes as this tee plays them.
+ *
+ * Identical to `holesInPlayOrder` unless the card prints a second handicap row
+ * for the tee, in which case that row replaces the stroke index. Everything
+ * downstream — allocation, net, points — reads the si off these holes, so this
+ * is the only place the two rows are ever chosen between.
+ */
+export function holesForTee(course: PlayableCourse, tee: Tee): Hole[] {
+  const holes = holesInPlayOrder(course);
+  if (!tee.si) return holes;
+  const row = tee.si;
+  return holes.map((hole) => ({ ...hole, si: row[hole.hole - 1]! }));
+}
+
+/**
  * Step 1: courseHandicap = round(HI * (slope / 113) + (rating - par))
+ *
+ * `ratingSet` picks which of the tee's two ratings applies, and is required
+ * precisely so it cannot be forgotten.
  */
 export function courseHandicap(
   handicapIndex: number,
   tee: Tee,
   par: number,
+  ratingSet: RatingSet,
 ): number {
-  return roundHalfAwayFromZero(
-    handicapIndex * (tee.slope / NEUTRAL_SLOPE) + (tee.rating - par),
-  );
+  const { rating, slope } = ratingFor(tee, ratingSet);
+  return roundHalfAwayFromZero(handicapIndex * (slope / NEUTRAL_SLOPE) + (rating - par));
 }
 
 /**
@@ -144,8 +216,9 @@ export function playingHandicapForRound(
   course: PlayableCourse,
   teeName: string,
   handicapIndex: number,
+  ratingSet: RatingSet,
 ): { courseHandicap: number; playingHandicap: number } {
-  const ch = courseHandicap(handicapIndex, getTee(course, teeName), course.par);
+  const ch = courseHandicap(handicapIndex, getTee(course, teeName), course.par, ratingSet);
   return { courseHandicap: ch, playingHandicap: playingHandicap(ch) };
 }
 
@@ -186,13 +259,14 @@ export function strokesReceivedOnHole(
   return playingHandicapValue >= 0 || received === 0 ? received : -received;
 }
 
-/** Strokes received on every hole, keyed by hole number. */
+/** Strokes received on every hole off this tee, keyed by hole number. */
 export function strokeAllocation(
   course: PlayableCourse,
+  tee: Tee,
   playingHandicapValue: number,
 ): Map<number, number> {
   return new Map(
-    holesInPlayOrder(course).map((h) => [
+    holesForTee(course, tee).map((h) => [
       h.hole,
       strokesReceivedOnHole(h.si, playingHandicapValue),
     ]),
@@ -234,13 +308,14 @@ export function strokesFromRows(rows: readonly ScoreRow[]): Strokes[] {
  * Scores one player's round. `strokes` is indexed by hole - 1; null entries are
  * holes the player picked up on.
  *
- * Step 6: the playing handicap is derived here, from this course and tee, so it
- * is never shared across rounds.
+ * Step 6: the playing handicap is derived here, from this course, this tee and
+ * this player's rating set, so it is never shared across rounds or players.
  */
 export function scoreRound(
   course: Course,
   teeName: string,
   handicapIndex: number,
+  ratingSet: RatingSet,
   strokes: readonly Strokes[],
 ): RoundResult {
   const playable = assertPlayableCourse(course);
@@ -252,10 +327,10 @@ export function scoreRound(
   }
 
   const tee = getTee(playable, teeName);
-  const ch = courseHandicap(handicapIndex, tee, playable.par);
+  const ch = courseHandicap(handicapIndex, tee, playable.par, ratingSet);
   const ph = playingHandicap(ch);
 
-  const holes: HoleResult[] = holesInPlayOrder(playable).map((hole) => {
+  const holes: HoleResult[] = holesForTee(playable, tee).map((hole) => {
     const gross = strokes[hole.hole - 1] ?? null;
     if (gross !== null && (!Number.isInteger(gross) || gross < 1)) {
       throw new Error(
@@ -279,6 +354,7 @@ export function scoreRound(
     courseId: playable.id,
     courseName: playable.name,
     teeName: tee.name,
+    ratingSet,
     handicapIndex,
     courseHandicap: ch,
     playingHandicap: ph,

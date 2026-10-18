@@ -11,13 +11,14 @@
 import {
   HOLES_PER_ROUND,
   assertPlayableCourse,
-  holesInPlayOrder,
+  getTee,
+  holesForTee,
   netScore,
   playingHandicapForRound,
   stablefordPoints,
   strokesReceivedOnHole,
 } from '../scoring/scoring';
-import type { Course } from '../scoring/types';
+import type { Course, RatingSet } from '../scoring/types';
 
 /** Lowest and highest score the keypad will record. */
 export const MIN_STROKES = 1;
@@ -62,6 +63,7 @@ export function buildEntryCard(
   course: Course,
   teeName: string,
   handicapIndex: number,
+  ratingSet: RatingSet,
   strokes: readonly (number | null)[],
 ): EntryCard {
   const playable = assertPlayableCourse(course);
@@ -69,9 +71,12 @@ export function buildEntryCard(
     playable,
     teeName,
     handicapIndex,
+    ratingSet,
   );
 
-  const holes: EntryHole[] = holesInPlayOrder(playable).map((hole) => {
+  // The tee's own stroke index when the card prints one, so the dots on the
+  // hole strip mark the holes this player actually gets a shot on.
+  const holes: EntryHole[] = holesForTee(playable, getTee(playable, teeName)).map((hole) => {
     const gross = strokes[hole.hole - 1] ?? null;
     const strokesReceived = strokesReceivedOnHole(hole.si, playingHandicap);
     const net = netScore(gross, strokesReceived);

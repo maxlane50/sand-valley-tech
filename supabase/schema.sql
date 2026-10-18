@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════════════════
--- Sand Valley trip scoreboard — schema.
+-- Bandon Dunes trip scoreboard — schema.
 -- Paste into the Supabase SQL editor and run.
 --
 -- Raw data only. Course handicaps, net scores, Stableford points and standings
@@ -11,15 +11,40 @@ create table if not exists players (
   name           text not null,
   -- Frozen snapshot taken before the trip. Not a live GHIN lookup; this must
   -- not change mid-competition. Negative values are plus handicaps.
-  handicap_index numeric(4, 1) not null
+  handicap_index numeric(4, 1) not null,
+  -- Which of the two course ratings printed on the card this player is scored
+  -- against. Every set of tees is rated twice and the pair is not close: off
+  -- the black tees at Bandon Trails the rating is 74.9 for men and 80.3 for
+  -- women. Frozen for the same reason handicap_index is.
+  --
+  -- This names a column on the scorecard, not a person.
+  rating_set     text not null default 'men' check (rating_set in ('men', 'women'))
 );
+
+-- ─── Migration: rating_set ─────────────────────────────────────────────────
+-- For a database created before the column existed. Safe to run more than
+-- once, and safe to run on a fresh database that already has it. Everyone
+-- already in the table keeps being scored exactly as they were, off the
+-- men's rating.
+--
+-- Until this has been run, /enter cannot save players: the read path falls
+-- back to 'men' and the rest of the app works, but a write names the column.
+
+alter table players
+  add column if not exists rating_set text not null default 'men';
+
+alter table players
+  drop constraint if exists players_rating_set_check;
+
+alter table players
+  add constraint players_rating_set_check check (rating_set in ('men', 'women'));
 
 create table if not exists rounds (
   id        bigint generated always as identity primary key,
   date      date not null,
-  -- Matches an `id` in src/data/courses.json (lido, sand-valley, ...).
+  -- Matches an `id` in src/data/courses.json (bandon-dunes, pacific-dunes, ...).
   course_id text not null,
-  -- Matches a tee `name` on that course in courses.json (e.g. 'White').
+  -- Matches a tee `name` on that course in courses.json (e.g. 'Black').
   tee_name  text not null
 );
 

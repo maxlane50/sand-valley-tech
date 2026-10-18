@@ -33,8 +33,8 @@ function Day({ day, state }: { day: ScheduleDay; state: DayState }) {
         alt=""
         // Intrinsic size, so the aspect ratio is known before the file lands.
         // The box itself is --logo-w square; object-contain does the fitting.
-        width={180}
-        height={178}
+        width={256}
+        height={256}
         decoding="async"
         className={`logo-print h-logo-w w-logo-w flex-none object-contain ${
           played ? 'logo-spent' : ''

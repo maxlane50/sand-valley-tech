@@ -12,14 +12,19 @@ const lookup = (id: string) => {
   }
 };
 
-const R1: RoundRecord = { id: 1, date: '2026-08-13', course_id: 'lido', tee_name: 'White' };
-const R2: RoundRecord = { id: 2, date: '2026-08-14', course_id: 'lido', tee_name: 'White' };
+const R1: RoundRecord = { id: 1, date: '2026-08-13', course_id: 'bandon-dunes', tee_name: 'Black' };
+const R2: RoundRecord = { id: 2, date: '2026-08-14', course_id: 'bandon-dunes', tee_name: 'Black' };
 
-const ALICE: PlayerRecord = { id: 1, name: 'Alice', handicap_index: 12.0 };
-const BOB: PlayerRecord = { id: 2, name: 'Bob', handicap_index: 12.0 };
+const ALICE: PlayerRecord = { id: 1, name: 'Alice', handicap_index: 12.0, rating_set: 'men' };
+const BOB: PlayerRecord = { id: 2, name: 'Bob', handicap_index: 12.0, rating_set: 'men' };
 
-/** The Lido's pars in hole order. */
-const PARS = [4, 4, 3, 5, 4, 5, 5, 3, 4, 4, 4, 4, 4, 3, 4, 3, 5, 4];
+/**
+ * Bandon Dunes's pars in hole order, read off the card rather than copied, so
+ * a card edit can never leave these fixtures scoring against the wrong pars.
+ */
+const PARS = [...getCourse('bandon-dunes').holes]
+  .sort((a, b) => a.hole - b.hole)
+  .map((hole) => hole.par);
 
 function card(roundId: number, playerId: number, strokes: (number | null)[]): ScoreRecord[] {
   return strokes.map((s, i) => ({ round_id: roundId, player_id: playerId, hole: i + 1, strokes: s }));
@@ -44,16 +49,16 @@ describe('buildTripStats · hole type splits', () => {
     for (const type of alice.byType) {
       expect(type.averageVsPar).toBe(0);
     }
-    // The Lido has 4 par 3s, 10 par 4s and 4 par 5s.
+    // Bandon Dunes has 4 par 3s, 10 par 4s and 4 par 5s.
     expect(alice.byType.map((t) => t.holes)).toEqual([4, 10, 4]);
     expect(alice.byType.map((t) => t.par)).toEqual([3, 4, 5]);
   });
 
   it('reports a null average for a hole type never played', () => {
-    // Only holes 1 and 2 (both par 4) entered.
+    // Only holes 1 and 4 (both par 4) entered.
     const strokes: (number | null)[] = Array(18).fill(null);
     strokes[0] = 4;
-    strokes[1] = 4;
+    strokes[3] = 4;
     const stats = build([R1], [ALICE], card(1, 1, strokes));
     const alice = stats.players[0]!;
 
@@ -204,10 +209,10 @@ describe('buildTripStats · group figures', () => {
 
 describe('buildTripStats · hole difficulty', () => {
   it('ranks holes purely on what the group scored, ignoring the stroke index', () => {
-    // Everyone is level par except hole 14, which happens to carry the printed
-    // easiest stroke index. It played hardest, so it ranks hardest.
+    // Everyone is level par except hole 12, which carries the printed easiest
+    // stroke index on this card. It played hardest, so it ranks hardest.
     const strokes = overPar(0);
-    strokes[13] = PARS[13]! + 4;
+    strokes[11] = PARS[11]! + 4;
     const stats = build([R1], [ALICE, BOB], [
       ...card(1, 1, strokes),
       ...card(1, 2, strokes),
@@ -215,7 +220,7 @@ describe('buildTripStats · hole difficulty', () => {
 
     expect(stats.holesRanked).toBe(18);
     const hardest = stats.hardest[0]!;
-    expect(hardest.hole).toBe(14);
+    expect(hardest.hole).toBe(12);
     expect(hardest.si).toBe(18); // carried for context only
     expect(hardest.averageVsPar).toBe(4);
     expect(hardest.actualRank).toBe(1);
@@ -224,11 +229,11 @@ describe('buildTripStats · hole difficulty', () => {
 
   it('orders strictly by scoring average, whatever the stroke index says', () => {
     const strokes = overPar(0);
-    strokes[13] = PARS[13]! + 4; // si 18, worst average
-    strokes[3] = PARS[3]! + 2; // si 1, second worst
+    strokes[11] = PARS[11]! + 4; // hole 12, si 18 on the card, worst average
+    strokes[4] = PARS[4]! + 2; // hole 5, si 1 on the card, second worst
     const stats = build([R1], [ALICE], card(1, 1, strokes));
 
-    expect(stats.hardest.map((h) => h.hole)).toEqual([14, 4, expect.any(Number)]);
+    expect(stats.hardest.map((h) => h.hole)).toEqual([12, 5, expect.any(Number)]);
     expect(stats.hardest[0]!.averageVsPar).toBeGreaterThan(
       stats.hardest[1]!.averageVsPar,
     );
@@ -280,7 +285,7 @@ describe('buildTripStats · superlatives', () => {
     const best = stats.superlatives.find((s) => s.label === 'Most points, one round')!;
     expect(best.name).toBe('Alice');
     expect(best.note).toContain('Round 1');
-    expect(best.note).toContain('The Lido');
+    expect(best.note).toContain('Bandon Dunes');
   });
 
   it('measures the longest run of point-scoring holes', () => {
@@ -328,7 +333,7 @@ describe('buildTripStats · superlatives', () => {
   });
 
   it('describes a three-way tie compactly', () => {
-    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0 };
+    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0, rating_set: 'men' };
     const strokes = overPar(0);
     strokes[0] = PARS[0]! + 5;
     const stats = build([R1], [ALICE, BOB, carol], [
@@ -417,7 +422,7 @@ describe('buildTripStats · trajectory', () => {
   });
 
   it('places a player with no cards last without breaking the chart', () => {
-    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0 };
+    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0, rating_set: 'men' };
     const stats = build([R1], [ALICE, BOB, carol], [
       ...card(1, 1, overPar(0)), // 51 points
       ...card(1, 2, overPar(2)), // 15 points
@@ -429,7 +434,7 @@ describe('buildTripStats · trajectory', () => {
   it('ties a scoreless card with a player who has no card at all', () => {
     // overPar(4) earns nothing off this handicap, so both sit on zero and
     // share the position rather than one being arbitrarily ahead.
-    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0 };
+    const carol: PlayerRecord = { id: 3, name: 'Carol', handicap_index: 12.0, rating_set: 'men' };
     const stats = build([R1], [ALICE, BOB, carol], [
       ...card(1, 1, overPar(0)),
       ...card(1, 2, overPar(4)),
@@ -456,7 +461,7 @@ describe('buildTripStats · rounds and problems', () => {
     expect(stats.rounds).toHaveLength(1);
     expect(stats.rounds[0]).toMatchObject({
       number: 1,
-      courseName: 'The Lido',
+      courseName: 'Bandon Dunes',
       par: 72,
       problem: null,
     });
@@ -467,15 +472,15 @@ describe('buildTripStats · rounds and problems', () => {
     const stub: RoundRecord = {
       id: 3,
       date: '2026-08-15',
-      course_id: 'mammoth-dunes',
-      tee_name: 'White',
+      course_id: 'old-macdonald',
+      tee_name: 'Black',
     };
     const stats = build([R1, stub], [ALICE], card(1, 1, overPar(0)));
 
     expect(stats.problems).toHaveLength(1);
-    expect(stats.problems[0]).toMatch(/Mammoth Dunes.*par is null/s);
+    expect(stats.problems[0]).toMatch(/old-macdonald/);
     expect(stats.rounds[1]!.par).toBeNull();
-    expect(stats.holesRanked).toBe(18); // only the Lido contributes
+    expect(stats.holesRanked).toBe(18); // only the Bandon contributes
     expect(stats.players[0]!.holesPlayed).toBe(18);
   });
 

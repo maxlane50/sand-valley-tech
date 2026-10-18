@@ -26,6 +26,9 @@ import {
   avatarObjectPath,
   base64FromDataUrl,
 } from '../../src/lib/avatars.js';
+// The two course ratings a player can be scored against. Shared with the
+// browser so neither end can invent a third.
+import { isRatingSet, type RatingSet } from '../../src/scoring/types.js';
 
 const HOLES = 18;
 /** Nobody makes 20 on a hole and still writes it down. Guards typos and abuse. */
@@ -294,6 +297,8 @@ export interface PlayerInput {
   id?: number;
   name: string;
   handicapIndex: number;
+  /** Which of each tee's two course ratings they are scored against. */
+  ratingSet: RatingSet;
 }
 
 export interface SavePlayersBody {
@@ -337,7 +342,13 @@ export async function savePlayers(body: unknown, client: string): Promise<ApiRes
     if (entry.id !== undefined && !Number.isInteger(entry.id)) {
       return fail(400, 'Player ids must be integers.');
     }
-    cleaned.push({ id: entry.id, name, handicapIndex: roundIndex(index) });
+    // Absent means men's, which is what every player was scored off before the
+    // column existed. An unrecognised value is a bug, not a default.
+    const ratingSet = entry?.ratingSet === undefined ? 'men' : entry.ratingSet;
+    if (!isRatingSet(ratingSet)) {
+      return fail(400, `${name} has an unknown rating set "${String(ratingSet)}". Use "men" or "women".`);
+    }
+    cleaned.push({ id: entry.id, name, handicapIndex: roundIndex(index), ratingSet });
   }
 
   const removing = Array.isArray(deleteIds) ? deleteIds : [];
@@ -348,7 +359,7 @@ export async function savePlayers(body: unknown, client: string): Promise<ApiRes
   const config = getConfig();
   if ('error' in config) return fail(500, config.error);
 
-  const existingResponse = await postgrest(config, 'players?select=id,name,handicap_index', {
+  const existingResponse = await postgrest(config, 'players?select=*', {
     method: 'GET',
   });
   if (!existingResponse.ok) {
@@ -358,6 +369,7 @@ export async function savePlayers(body: unknown, client: string): Promise<ApiRes
     id: number;
     name: string;
     handicap_index: number;
+    rating_set?: string;
   }[];
   const byId = new Map(existing.map((p) => [p.id, p]));
 
@@ -382,6 +394,15 @@ export async function savePlayers(body: unknown, client: string): Promise<ApiRes
         code: 'handicap-locked',
       });
     }
+    // The rating set locks for the same reason the index does: it feeds the
+    // course handicap, and every screen recomputes from it on every read, so
+    // flipping it mid-trip would rescore rounds already in the book.
+    const ratingMoved = (current.rating_set ?? 'men') !== entry.ratingSet;
+    if (ratingMoved && scored.has(entry.id)) {
+      return fail(409, `${current.name} has already posted a score, so whether they play off the men's or women's rating is locked. Names can still be changed.`, {
+        code: 'rating-set-locked',
+      });
+    }
   }
 
   for (const id of removing) {
@@ -404,16 +425,24 @@ export async function savePlayers(body: unknown, client: string): Promise<ApiRes
     if (entry.id === undefined) continue;
     const response = await postgrest(config, `players?id=eq.${entry.id}`, {
       method: 'PATCH',
-      body: { name: entry.name, handicap_index: entry.handicapIndex },
+      body: {
+        name: entry.name,
+        handicap_index: entry.handicapIndex,
+        rating_set: entry.ratingSet,
+      },
       prefer: 'return=minimal',
     });
-    if (!response.ok) return fail(500, `Could not update player: ${await response.text()}`);
+    if (!response.ok) return ratingSetFailure('Could not update player', await response.text());
     updated += 1;
   }
 
   const inserts = cleaned
     .filter((entry) => entry.id === undefined)
-    .map((entry) => ({ name: entry.name, handicap_index: entry.handicapIndex }));
+    .map((entry) => ({
+      name: entry.name,
+      handicap_index: entry.handicapIndex,
+      rating_set: entry.ratingSet,
+    }));
 
   if (inserts.length > 0) {
     const response = await postgrest(config, 'players', {
@@ -421,7 +450,7 @@ export async function savePlayers(body: unknown, client: string): Promise<ApiRes
       body: inserts,
       prefer: 'return=minimal',
     });
-    if (!response.ok) return fail(500, `Could not add players: ${await response.text()}`);
+    if (!response.ok) return ratingSetFailure('Could not add players', await response.text());
   }
 
   return {
@@ -487,6 +516,26 @@ export async function saveCard(body: unknown, client: string): Promise<ApiResult
   }
 
   return { status: 200, body: { ok: true, grossTotal } };
+}
+
+/**
+ * PostgREST answers PGRST204 for a column it cannot find in its schema cache.
+ * On players that has one cause worth reporting — the rating_set migration has
+ * not been run — so say that rather than forwarding raw PostgREST JSON to
+ * somebody trying to set up the field.
+ */
+function ratingSetFailure(what: string, detail: string): ApiResult {
+  if (detail.includes('PGRST204') && detail.includes('rating_set')) {
+    return fail(
+      503,
+      "Saving players needs the players.rating_set column, which this database " +
+        'does not have yet. Run the rating_set block at the bottom of ' +
+        'supabase/schema.sql in the Supabase SQL editor. Until then everyone is ' +
+        "scored off the men's rating, and the rest of the app works normally.",
+      { code: 'rating-set-missing' },
+    );
+  }
+  return fail(500, `${what}: ${detail}`);
 }
 
 /* ─── POST /api/save-photo ───────────────────────────────────────────────── */

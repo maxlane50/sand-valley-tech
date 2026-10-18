@@ -1,3 +1,4 @@
+import { isRatingSet } from '../scoring/types';
 import { getSupabase } from './supabase';
 import type {
   PlayerRecord,
@@ -16,7 +17,11 @@ export async function fetchTrip(): Promise<TripData> {
   const supabase = getSupabase();
 
   const [players, rounds, scores, playerTees] = await Promise.all([
-    supabase.from('players').select('id, name, handicap_index').order('name'),
+    // `*` rather than a column list, so a database that has not had the
+    // rating_set migration run against it still reads. Every player on such a
+    // database falls back to the men's rating below, which is what they were
+    // being scored off before the column existed.
+    supabase.from('players').select('*').order('name'),
     supabase.from('rounds').select('id, date, course_id, tee_name').order('date').order('id'),
     supabase.from('scores').select('round_id, player_id, hole, strokes'),
     supabase.from('player_tees').select('round_id, player_id, tee_name'),
@@ -43,7 +48,12 @@ export async function fetchTrip(): Promise<TripData> {
   }
 
   return {
-    players: (players.data ?? []) as PlayerRecord[],
+    players: (players.data ?? []).map((row) => ({
+      ...(row as PlayerRecord),
+      rating_set: isRatingSet((row as { rating_set?: unknown }).rating_set)
+        ? (row as PlayerRecord).rating_set
+        : 'men',
+    })),
     rounds: (rounds.data ?? []) as RoundRecord[],
     scores: (scores.data ?? []) as ScoreRecord[],
     playerTees: (playerTees.error ? [] : (playerTees.data ?? [])) as PlayerTeeRecord[],

@@ -18,11 +18,11 @@ const lookup = (id: string) => {
   }
 };
 
-const LIDO_ROUND: RoundRecord = {
+const BANDON_ROUND: RoundRecord = {
   id: 1,
   date: '2026-08-13',
-  course_id: 'lido',
-  tee_name: 'White',
+  course_id: 'bandon-dunes',
+  tee_name: 'Black',
 };
 
 /** Every hole the same score, for a predictable card. */
@@ -36,9 +36,9 @@ function flatCard(roundId: number, playerId: number, strokes: number | null): Sc
 }
 
 const PLAYERS: PlayerRecord[] = [
-  { id: 1, name: 'Alice', handicap_index: 2.0 },
-  { id: 2, name: 'Bob', handicap_index: 12.0 },
-  { id: 3, name: 'Cass', handicap_index: 26.0 },
+  { id: 1, name: 'Alice', handicap_index: 2.0, rating_set: 'men' },
+  { id: 2, name: 'Bob', handicap_index: 12.0, rating_set: 'men' },
+  { id: 3, name: 'Cass', handicap_index: 26.0, rating_set: 'men' },
 ];
 
 describe('buildLeaderboard', () => {
@@ -48,7 +48,7 @@ describe('buildLeaderboard', () => {
       ...flatCard(1, 2, 5),
       ...flatCard(1, 3, 5),
     ];
-    const board = buildLeaderboard(PLAYERS, [LIDO_ROUND], scores, lookup);
+    const board = buildLeaderboard(PLAYERS, [BANDON_ROUND], scores, lookup);
 
     // Same gross card, more strokes received -> more points.
     expect(board.rows.map((r) => r.name)).toEqual(['Cass', 'Bob', 'Alice']);
@@ -72,11 +72,11 @@ describe('buildLeaderboard', () => {
     ];
     // Make Alice and Bob tie by giving them identical indexes.
     const tied: PlayerRecord[] = [
-      { id: 1, name: 'Alice', handicap_index: 12.0 },
-      { id: 2, name: 'Bob', handicap_index: 12.0 },
-      { id: 3, name: 'Cass', handicap_index: 26.0 },
+      { id: 1, name: 'Alice', handicap_index: 12.0, rating_set: 'men' },
+      { id: 2, name: 'Bob', handicap_index: 12.0, rating_set: 'men' },
+      { id: 3, name: 'Cass', handicap_index: 26.0, rating_set: 'men' },
     ];
-    const board = buildLeaderboard(tied, [LIDO_ROUND], scores, lookup);
+    const board = buildLeaderboard(tied, [BANDON_ROUND], scores, lookup);
 
     expect(board.rows.map((r) => r.position)).toEqual([1, 2, 2]);
     expect(board.rows[1]!.totalPoints).toBe(board.rows[2]!.totalPoints);
@@ -84,8 +84,8 @@ describe('buildLeaderboard', () => {
 
   it('sums points across rounds and marks the best single round of the trip', () => {
     const rounds: RoundRecord[] = [
-      LIDO_ROUND,
-      { id: 2, date: '2026-08-14', course_id: 'lido', tee_name: 'White' },
+      BANDON_ROUND,
+      { id: 2, date: '2026-08-14', course_id: 'bandon-dunes', tee_name: 'Black' },
     ];
     const scores = [
       ...flatCard(1, 1, 5),
@@ -106,8 +106,8 @@ describe('buildLeaderboard', () => {
 
   it('tracks position movement across the latest round', () => {
     const rounds: RoundRecord[] = [
-      LIDO_ROUND,
-      { id: 2, date: '2026-08-14', course_id: 'lido', tee_name: 'White' },
+      BANDON_ROUND,
+      { id: 2, date: '2026-08-14', course_id: 'bandon-dunes', tee_name: 'Black' },
     ];
     const two = PLAYERS.slice(0, 2); // Alice (2.0), Bob (12.0)
     const scores = [
@@ -129,18 +129,18 @@ describe('buildLeaderboard', () => {
 
   it('reports a stub course instead of throwing, and still scores the others', () => {
     const rounds: RoundRecord[] = [
-      LIDO_ROUND,
-      { id: 2, date: '2026-08-14', course_id: 'mammoth-dunes', tee_name: 'White' },
+      BANDON_ROUND,
+      { id: 2, date: '2026-08-14', course_id: 'old-macdonald', tee_name: 'Black' },
     ];
     const scores = [...flatCard(1, 1, 5), ...flatCard(2, 1, 5)];
     const board = buildLeaderboard([PLAYERS[0]!], rounds, scores, lookup);
 
     expect(board.problems).toHaveLength(1);
-    expect(board.problems[0]).toMatch(/Round 2.*Mammoth Dunes.*par is null/s);
+    expect(board.problems[0]).toMatch(/Round 2 points to course "old-macdonald"/);
     expect(board.rounds[1]!.par).toBeNull();
 
     const alice = board.rows[0]!;
-    expect(alice.rounds[0]!.points).toBeGreaterThan(0); // the Lido still counts
+    expect(alice.rounds[0]!.points).toBeGreaterThan(0); // the Bandon still counts
     expect(alice.rounds[1]!.points).toBeNull(); // the stub does not
     expect(alice.totalPoints).toBe(alice.rounds[0]!.points);
   });
@@ -156,7 +156,7 @@ describe('buildLeaderboard', () => {
 
   it('reports a bad tee name without taking the board down', () => {
     const rounds: RoundRecord[] = [
-      { id: 1, date: '2026-08-13', course_id: 'lido', tee_name: 'Tips' },
+      { id: 1, date: '2026-08-13', course_id: 'bandon-dunes', tee_name: 'Tips' },
     ];
     const board = buildLeaderboard([PLAYERS[0]!], rounds, flatCard(1, 1, 5), lookup);
     expect(board.problems[0]).toMatch(/no tee named "Tips"/);
@@ -165,7 +165,7 @@ describe('buildLeaderboard', () => {
 
   it('shows a player with no scores yet as a dot, not a zero-point round', () => {
     const scores = flatCard(1, 1, 5); // only Alice has a card
-    const board = buildLeaderboard(PLAYERS, [LIDO_ROUND], scores, lookup);
+    const board = buildLeaderboard(PLAYERS, [BANDON_ROUND], scores, lookup);
 
     const bob = board.rows.find((r) => r.name === 'Bob')!;
     expect(bob.rounds[0]!.points).toBeNull();
@@ -176,7 +176,7 @@ describe('buildLeaderboard', () => {
   it('still scores a picked-up hole but withholds the gross total', () => {
     const card = flatCard(1, 1, 5);
     card[3] = { ...card[3]!, strokes: null };
-    const board = buildLeaderboard([PLAYERS[0]!], [LIDO_ROUND], card, lookup);
+    const board = buildLeaderboard([PLAYERS[0]!], [BANDON_ROUND], card, lookup);
 
     const alice = board.rows[0]!;
     // Points are unaffected — the picked-up hole scores 0 and the rest count.
@@ -188,7 +188,7 @@ describe('buildLeaderboard', () => {
 
   it('withholds the gross total for a part-entered card', () => {
     const partial = flatCard(1, 1, 5).slice(0, 12);
-    const board = buildLeaderboard([PLAYERS[0]!], [LIDO_ROUND], partial, lookup);
+    const board = buildLeaderboard([PLAYERS[0]!], [BANDON_ROUND], partial, lookup);
 
     expect(board.rows[0]!.grossTotal).toBeNull();
     expect(board.rows[0]!.totalPoints).toBeGreaterThan(0);
@@ -196,8 +196,8 @@ describe('buildLeaderboard', () => {
 
   it('reports the gross total once every card is complete', () => {
     const rounds: RoundRecord[] = [
-      LIDO_ROUND,
-      { id: 2, date: '2026-08-14', course_id: 'lido', tee_name: 'White' },
+      BANDON_ROUND,
+      { id: 2, date: '2026-08-14', course_id: 'bandon-dunes', tee_name: 'Black' },
     ];
     const scores = [...flatCard(1, 1, 5), ...flatCard(2, 1, 4)];
     const board = buildLeaderboard([PLAYERS[0]!], rounds, scores, lookup);
@@ -207,7 +207,7 @@ describe('buildLeaderboard', () => {
 
   it('counts a part-played round as thru that many holes', () => {
     const partial = flatCard(1, 1, 5).slice(0, 11);
-    const board = buildLeaderboard([PLAYERS[0]!], [LIDO_ROUND], partial, lookup);
+    const board = buildLeaderboard([PLAYERS[0]!], [BANDON_ROUND], partial, lookup);
 
     expect(board.rounds[0]!.holesPlayed).toBe(11);
     expect(board.holesPlayed).toBe(11);
@@ -216,8 +216,8 @@ describe('buildLeaderboard', () => {
 
   it('orders rounds by date regardless of row order or id', () => {
     const rounds: RoundRecord[] = [
-      { id: 9, date: '2026-08-15', course_id: 'lido', tee_name: 'White' },
-      { id: 3, date: '2026-08-13', course_id: 'lido', tee_name: 'White' },
+      { id: 9, date: '2026-08-15', course_id: 'bandon-dunes', tee_name: 'Black' },
+      { id: 3, date: '2026-08-13', course_id: 'bandon-dunes', tee_name: 'Black' },
     ];
     const board = buildLeaderboard([PLAYERS[0]!], rounds, [], lookup);
     expect(board.rounds.map((r) => r.number)).toEqual([1, 2]);
@@ -234,9 +234,14 @@ describe('buildLeaderboard', () => {
 
   it('accepts a handicap index that arrives as a string from postgres numeric', () => {
     const asString = [
-      { id: 1, name: 'Alice', handicap_index: '12.0' as unknown as number },
+      {
+        id: 1,
+        name: 'Alice',
+        handicap_index: '12.0' as unknown as number,
+        rating_set: 'men' as const,
+      },
     ];
-    const board = buildLeaderboard(asString, [LIDO_ROUND], flatCard(1, 1, 5), lookup);
+    const board = buildLeaderboard(asString, [BANDON_ROUND], flatCard(1, 1, 5), lookup);
     expect(board.rows[0]!.handicapIndex).toBe(12);
     expect(board.rows[0]!.totalPoints).toBeGreaterThan(0);
   });

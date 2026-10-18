@@ -1,9 +1,17 @@
 /** Row shapes as they come back from Supabase, matching supabase/schema.sql. */
 
+import type { RatingSet } from '../scoring/types';
+
 export interface PlayerRecord {
   id: number;
   name: string;
   handicap_index: number;
+  /**
+   * Which of each tee's two course ratings this player is scored against.
+   * Defaults to 'men' when the column is missing, which is the state of a
+   * database that has not had the rating_set migration run against it yet.
+   */
+  rating_set: RatingSet;
 }
 
 export interface RoundRecord {

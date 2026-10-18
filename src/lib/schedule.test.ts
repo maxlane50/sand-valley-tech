@@ -90,10 +90,25 @@ describe('the configured schedule', () => {
   });
 
   it('falls on the days the trip was booked for', () => {
+    // Saturday 10/24, Sunday 10/25, Monday 10/26 — the weekday is derived from
+    // the date rather than typed, so a mistyped date fails here rather than
+    // showing the wrong day on the board all weekend.
     expect(SCHEDULE.map((day) => formatDay(day.date))).toEqual([
-      { weekday: 'Fri', date: 'Sep 11' },
-      { weekday: 'Sat', date: 'Sep 12' },
-      { weekday: 'Sun', date: 'Sep 13' },
+      { weekday: 'Sat', date: 'Oct 24' },
+      { weekday: 'Sun', date: 'Oct 25' },
+      { weekday: 'Mon', date: 'Oct 26' },
     ]);
+  });
+
+  it('plays the three courses in the order they were booked', () => {
+    expect(SCHEDULE.map((day) => day.courseId)).toEqual([
+      'bandon-dunes',
+      'pacific-dunes',
+      'bandon-trails',
+    ]);
+  });
+
+  it('gives every day a course mark', () => {
+    for (const day of SCHEDULE) expect(day.logo).toBeTruthy();
   });
 });

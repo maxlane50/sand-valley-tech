@@ -1,4 +1,6 @@
-/** Thin client for the two serverless endpoints in /api. */
+/** Thin client for the serverless endpoints in /api. */
+
+import type { RatingSet } from '../scoring/types';
 
 export interface ApiFailure {
   status: number;
@@ -59,7 +61,12 @@ export function saveCard(input: {
 
 export function savePlayers(input: {
   pin: string;
-  players: { id?: number; name: string; handicapIndex: number }[];
+  players: {
+    id?: number;
+    name: string;
+    handicapIndex: number;
+    ratingSet: RatingSet;
+  }[];
   deleteIds: number[];
 }) {
   return post<{ ok: true; inserted: number; updated: number; deleted: number }>(

@@ -134,8 +134,15 @@ export function CardEntry({
   const [save, setSave] = useState<SaveState>({ phase: 'entering', error: null });
 
   const card = useMemo(
-    () => buildEntryCard(course, teeName, Number(player.handicap_index), strokes),
-    [course, teeName, player.handicap_index, strokes],
+    () =>
+      buildEntryCard(
+        course,
+        teeName,
+        Number(player.handicap_index),
+        player.rating_set,
+        strokes,
+      ),
+    [course, teeName, player.handicap_index, player.rating_set, strokes],
   );
 
   const active = card.holes[activeIndex]!;
@@ -224,7 +231,8 @@ export function CardEntry({
           onClick={onBack}
           className="font-ui text-nano font-bold uppercase tracking-eyebrow text-fescue"
         >
-          ◀ R{roundNumber} · {course.name} · {teeName} · PH {card.playingHandicap}
+          ◀ R{roundNumber} · {course.name} · {teeName}
+          {player.rating_set === 'women' ? ' (W)' : ''} · PH {card.playingHandicap}
         </button>
 
         <div className="flex items-baseline justify-between gap-3 pt-1">

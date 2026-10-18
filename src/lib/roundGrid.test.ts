@@ -1,19 +1,29 @@
 import { describe, expect, it } from 'vitest';
 
 import { getCourse } from '../data/courses';
+import type { Course } from '../scoring/types';
 import { buildRoundGrid, shortLabels } from './roundGrid';
 import type { PlayerRecord, RoundRecord, ScoreRecord } from './types';
 
-const LIDO_ROUND: RoundRecord = {
+/** A course with no card filled in yet. */
+const STUB: Course = {
+  id: 'old-macdonald',
+  name: 'Old Macdonald',
+  par: null,
+  tees: [],
+  holes: [],
+};
+
+const BANDON_ROUND: RoundRecord = {
   id: 1,
   date: '2026-08-13',
-  course_id: 'lido',
-  tee_name: 'White',
+  course_id: 'bandon-dunes',
+  tee_name: 'Black',
 };
 
 const PLAYERS: PlayerRecord[] = [
-  { id: 1, name: 'Marty D.', handicap_index: 4.0 },
-  { id: 2, name: 'Big Wes', handicap_index: 11.0 },
+  { id: 1, name: 'Marty D.', handicap_index: 4.0, rating_set: 'men' },
+  { id: 2, name: 'Big Wes', handicap_index: 11.0, rating_set: 'men' },
 ];
 
 function card(playerId: number, strokes: (number | null)[]): ScoreRecord[] {
@@ -28,7 +38,7 @@ function card(playerId: number, strokes: (number | null)[]): ScoreRecord[] {
 const flat = (n: number) => Array.from({ length: 18 }, () => n as number | null);
 
 const build = (players = PLAYERS, scores: ScoreRecord[] = []) =>
-  buildRoundGrid(LIDO_ROUND, 1, getCourse('lido'), players, scores);
+  buildRoundGrid(BANDON_ROUND, 1, getCourse('bandon-dunes'), players, scores);
 
 describe('shortLabels', () => {
   it('uses the uppercased first name, capped at six characters', () => {
@@ -59,10 +69,10 @@ describe('buildRoundGrid', () => {
   it('lays out 18 holes and the card metadata', () => {
     const grid = build();
     expect(grid.holes).toHaveLength(18);
-    expect(grid.courseName).toBe('The Lido');
-    expect(grid.teeName).toBe('White');
-    expect(grid.parFront).toBe(37);
-    expect(grid.parBack).toBe(35);
+    expect(grid.courseName).toBe('Bandon Dunes');
+    expect(grid.teeName).toBe('Black');
+    expect(grid.parFront).toBe(36);
+    expect(grid.parBack).toBe(36);
     expect(grid.parTotal).toBe(72);
     expect(grid.problem).toBeNull();
   });
@@ -71,13 +81,13 @@ describe('buildRoundGrid', () => {
     const grid = build(PLAYERS, [...card(1, flat(4)), ...card(2, flat(5))]);
 
     const marty = grid.players[0]!;
-    expect(marty.playingHandicap).toBe(6); // HI 4.0 on 72.5/144 par 72
+    expect(marty.playingHandicap).toBe(7); // HI 4.0 on 73.5/143 par 72
     expect(marty.total.gross).toBe(72);
     expect(marty.entered).toBe(18);
     expect(marty.holes[3]!.hole).toBe(4);
 
     const wes = grid.players[1]!;
-    expect(wes.playingHandicap).toBe(14);
+    expect(wes.playingHandicap).toBe(14); // HI 11.0
     expect(wes.total.gross).toBe(90);
     // Same course, worse card, more strokes — points still computed per hole.
     expect(wes.total.points).toBe(wes.holes.reduce((s, h) => s + h.points, 0));
@@ -123,7 +133,7 @@ describe('buildRoundGrid', () => {
   it('carries strokes received per hole so the grid can mark them', () => {
     const grid = build([PLAYERS[1]!], card(2, flat(5)));
     const wes = grid.players[0]!;
-    expect(wes.playingHandicap).toBe(14);
+    expect(wes.playingHandicap).toBe(14); // HI 11.0
     for (const hole of wes.holes) {
       expect(hole.strokesReceived).toBe(hole.si <= 14 ? 1 : 0);
     }
@@ -131,14 +141,14 @@ describe('buildRoundGrid', () => {
 
   it('reports a stub course once and leaves the grid empty rather than throwing', () => {
     const grid = buildRoundGrid(
-      { ...LIDO_ROUND, course_id: 'mammoth-dunes' },
+      { ...BANDON_ROUND, course_id: 'old-macdonald' },
       2,
-      getCourse('mammoth-dunes'),
+      STUB,
       PLAYERS,
       [],
     );
 
-    expect(grid.problem).toMatch(/Mammoth Dunes.*par is null/s);
+    expect(grid.problem).toMatch(/Old Macdonald.*par is null/s);
     expect(grid.holes).toEqual([]);
     expect(grid.players).toHaveLength(2);
     expect(grid.players[0]!.holes).toEqual([]);
@@ -146,7 +156,7 @@ describe('buildRoundGrid', () => {
 
   it('reports an unknown course id', () => {
     const grid = buildRoundGrid(
-      { ...LIDO_ROUND, course_id: 'whistling-straits' },
+      { ...BANDON_ROUND, course_id: 'whistling-straits' },
       2,
       undefined,
       PLAYERS,
@@ -157,9 +167,9 @@ describe('buildRoundGrid', () => {
 
   it('isolates a bad tee name to the affected players', () => {
     const grid = buildRoundGrid(
-      { ...LIDO_ROUND, tee_name: 'Tips' },
+      { ...BANDON_ROUND, tee_name: 'Tips' },
       1,
-      getCourse('lido'),
+      getCourse('bandon-dunes'),
       PLAYERS,
       card(1, flat(4)),
     );

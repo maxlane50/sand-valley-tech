@@ -4,6 +4,7 @@ import { Avatar } from '../Avatar';
 import { savePhoto, savePlayers } from '../../lib/entryClient';
 import { toAvatarJpeg } from '../../lib/resizeImage';
 import type { PlayerRecord } from '../../lib/types';
+import { RATING_SETS, type RatingSet } from '../../scoring/types';
 
 /**
  * Pre-trip setup: the field and their frozen handicap indexes.
@@ -13,6 +14,12 @@ import type { PlayerRecord } from '../../lib/types';
  * read, so changing one mid-trip would silently rescore rounds already played —
  * the leaderboard for round 1 would move. Names stay editable, since nothing
  * scores off them.
+ *
+ * M/W locks for exactly the same reason. It picks which of the two course
+ * ratings printed on the card a player is scored against, and the gap is not
+ * small: off the black tees at Bandon Trails the rating is 74.9 for men and
+ * 80.3 for women, which is five strokes of course handicap before slope is
+ * even applied.
  */
 
 interface Draft {
@@ -21,7 +28,55 @@ interface Draft {
   name: string;
   /** Kept as a string so the field can be empty or mid-typing. */
   index: string;
+  ratingSet: RatingSet;
   locked: boolean;
+}
+
+/** Which course rating this player is scored off. Locks once they have posted. */
+function RatingSetToggle({
+  value,
+  disabled,
+  name,
+  onChange,
+}: {
+  value: RatingSet;
+  disabled: boolean;
+  name: string;
+  onChange: (next: RatingSet) => void;
+}) {
+  return (
+    <div className="flex flex-none gap-hair" role="group" aria-label={`${name || 'Player'} course rating`}>
+      {RATING_SETS.map((set) => {
+        const active = set === value;
+        return (
+          <button
+            key={set}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(set)}
+            aria-pressed={active}
+            aria-label={set === 'men' ? "Men's rating" : "Women's rating"}
+            title={
+              disabled
+                ? 'Locked — this player has already posted a score'
+                : set === 'men'
+                  ? "Scored off the men's course rating"
+                  : "Scored off the women's course rating"
+            }
+            className={`min-h-hit-min w-rating-col rounded-sm font-ui text-nano font-bold uppercase tracking-nav ${
+              active
+                ? disabled
+                  ? 'bg-rule-strong text-paper'
+                  : 'bg-turf-deep text-paper'
+                : 'bg-paper-2 text-ink-25'
+            }`}
+          >
+            {set === 'men' ? 'M' : 'W'}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 /**
@@ -97,6 +152,7 @@ function toDraft(player: PlayerRecord, locked: boolean): Draft {
     id: player.id,
     name: player.name,
     index: Number(player.handicap_index).toFixed(1),
+    ratingSet: player.rating_set,
     locked,
   };
 }
@@ -156,6 +212,7 @@ export function PlayersEditor({
         ...(d.id === undefined ? {} : { id: d.id }),
         name: d.name.trim(),
         handicapIndex: Number(d.index),
+        ratingSet: d.ratingSet,
       })),
       deleteIds: removed,
     });
@@ -199,7 +256,8 @@ export function PlayersEditor({
         <div className="flex items-baseline gap-2 pb-1 font-ui text-nano font-bold uppercase tracking-label-3 text-ink-45">
           <div className="w-avatar-lead flex-none">Photo</div>
           <div className="min-w-0 flex-1">Name</div>
-          <div className="w-rounds-col flex-none text-right">Index</div>
+          <div className="w-rating-pair flex-none text-center">M·W</div>
+          <div className="w-index-col flex-none text-right">Index</div>
           <div className="w-cell-col flex-none" />
         </div>
 
@@ -234,6 +292,12 @@ export function PlayersEditor({
               placeholder="Name"
               className={`${inputClass} min-w-0 flex-1 font-display text-name`}
             />
+            <RatingSetToggle
+              value={draft.ratingSet}
+              disabled={draft.locked}
+              name={draft.name}
+              onChange={(ratingSet) => update(index, { ratingSet })}
+            />
             <input
               value={draft.index}
               inputMode="decimal"
@@ -243,7 +307,7 @@ export function PlayersEditor({
               }
               aria-label={`Player ${index + 1} handicap index`}
               title={draft.locked ? 'Locked — this player has already posted a score' : undefined}
-              className={`${inputClass} w-rounds-col flex-none text-right font-num text-num-m`}
+              className={`${inputClass} w-index-col flex-none px-1 text-right font-num text-num-m`}
             />
             <button
               type="button"
@@ -261,7 +325,10 @@ export function PlayersEditor({
           type="button"
           onClick={() => {
             setStatus({ phase: 'idle' });
-            setDrafts((current) => [...current, { name: '', index: '', locked: false }]);
+            setDrafts((current) => [
+              ...current,
+              { name: '', index: '', ratingSet: 'men', locked: false },
+            ]);
           }}
           className="min-h-hit-min font-ui text-nano font-bold uppercase tracking-label text-turf"
         >
@@ -269,10 +336,13 @@ export function PlayersEditor({
         </button>
 
         <p className="pt-2 font-display text-list italic leading-body text-ink-45">
-          A negative index is a plus handicap. Once someone posts a score their
-          index locks, because every screen recomputes from it — changing one
-          later would rewrite rounds already played. Tap a photo to change it;
-          photos save on their own, not with the button below.
+          M or W picks which of the two course ratings on the card a player is
+          scored against — every set of tees is rated twice, and the women's
+          rating is the higher of the pair. A negative index is a plus handicap.
+          Once someone posts a score both lock, because every screen recomputes
+          from them — changing either later would rewrite rounds already played.
+          Tap a photo to change it; photos save on their own, not with the
+          button below.
         </p>
 
         <div className="flex items-center justify-between gap-3 pt-3">

@@ -8,11 +8,13 @@
 import {
   HOLES_PER_ROUND,
   assertPlayableCourse,
+  getTee,
+  holesForTee,
   holesInPlayOrder,
   scoreRound,
   strokesFromRows,
 } from '../scoring/scoring';
-import type { Course, Hole, HoleResult } from '../scoring/types';
+import type { Course, Hole, HoleResult, RatingSet } from '../scoring/types';
 import { resolveTee, type TeeMap } from './tees';
 import type { PlayerRecord, RoundRecord, ScoreRecord } from './types';
 
@@ -38,6 +40,8 @@ export interface GridPlayer {
   playingHandicap: number;
   /** The tee this player actually played, resolved from any override. */
   teeName: string;
+  /** Which of that tee's two course ratings they were scored against. */
+  ratingSet: RatingSet;
   /** 18 entries in hole order; `strokes: null` means no score entered. */
   holes: HoleResult[];
   entered: number;
@@ -158,10 +162,22 @@ export function buildRoundGrid(
       label,
       handicapIndex: Number(player.handicap_index),
       teeName,
+      ratingSet: player.rating_set,
     };
 
+    // A blank card still shows a stroke index per hole, so it has to be this
+    // tee's — the Orange tees at Bandon print their own row.
+    const teeHoles = (() => {
+      if (!playable) return holes;
+      try {
+        return holesForTee(playable, getTee(playable, teeName));
+      } catch {
+        return holes;
+      }
+    })();
+
     const empty = (playerProblem: string | null): GridPlayer => {
-      const blank = blankHoles(holes);
+      const blank = blankHoles(teeHoles);
       return {
         ...base,
         courseHandicap: 0,
@@ -185,6 +201,7 @@ export function buildRoundGrid(
         playable,
         teeName,
         Number(player.handicap_index),
+        player.rating_set,
         strokesFromRows(rows),
       );
     } catch (error) {
