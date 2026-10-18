@@ -80,7 +80,7 @@ function ChampionRow({
         <div className="flex min-w-0 items-center gap-2">
           <Avatar playerId={row.playerId} name={row.name} size="lead" tone="dark" />
           <div className="min-w-0">
-            <div className="letterpress-dark truncate font-display text-display leading-tight text-paper">
+            <div className="letterpress-dark break-words text-balance font-display text-display leading-name text-paper">
               {row.name}
             </div>
             <div className="truncate font-ui text-nano font-semibold uppercase tracking-nav text-fescue">
@@ -160,7 +160,14 @@ function Row({
         <div className="min-w-0">
           <div
             className={[
-              'truncate font-display leading-name',
+              // Names wrap rather than ellipsing. A player entered as
+              // "Dr. Chiang & Ms. Lane" is not a truncation problem to solve
+              // with a narrower font — it is two people, and the board is the
+              // official record, so it says so in full. `text-balance` splits
+              // the two lines evenly instead of leaving one word stranded,
+              // and `break-words` keeps a single very long token inside the
+              // column. Two lines still clear --row-h, so the rhythm holds.
+              'break-words text-balance font-display leading-name',
               isLeader
                 ? 'letterpress-dark text-name-lead text-paper'
                 : 'letterpress text-name text-ink',
