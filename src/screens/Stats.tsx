@@ -6,7 +6,6 @@ import { HoleDifficultySection } from '../components/stats/HoleDifficultySection
 import { ScoringCountsSection } from '../components/stats/ScoringCountsSection';
 import { Superlatives } from '../components/stats/Superlatives';
 import { Trajectory } from '../components/stats/Trajectory';
-import { TRIP } from '../config/trip';
 import { getCourse } from '../data/courses';
 import { useTrip } from '../hooks/useTrip';
 import { buildTripStats } from '../lib/stats';
@@ -63,7 +62,7 @@ export function Stats() {
 
   if (!stats || !stats.hasData) {
     return (
-      <Notice eyebrow={`${TRIP.title} · stats`} title="Nothing played yet">
+      <Notice eyebrow="Stats" title="Nothing played yet">
         Enter a card and the splits, the hardest holes and the superlatives all
         follow from it.
       </Notice>
@@ -74,7 +73,7 @@ export function Stats() {
     <div className="flex-1 overflow-auto bg-paper">
       <header className="border-b-strong border-ink bg-paper-2 px-gutter pt-3 pb-2">
         <div className="font-ui text-nano font-bold uppercase tracking-eyebrow text-ink-45">
-          {TRIP.title} · {stats.group.holesPlayed} holes played
+          {stats.group.holesPlayed} holes played
         </div>
         <h1 className="letterpress font-display text-page leading-tight text-ink">Stats</h1>
       </header>

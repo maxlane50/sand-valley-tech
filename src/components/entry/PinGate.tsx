@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 
-import { TRIP } from '../../config/trip';
 import { storePin, verifyPin } from '../../lib/entryClient';
 
 export function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
@@ -29,7 +28,7 @@ export function PinGate({ onUnlock }: { onUnlock: (pin: string) => void }) {
   return (
     <div className="flex flex-1 flex-col justify-center bg-turf-deep px-gutter">
       <div className="font-ui text-nano font-bold uppercase tracking-eyebrow text-fescue">
-        {TRIP.title} · score entry
+        Score entry
       </div>
       <div className="letterpress-dark pt-1 font-display text-page leading-tight text-paper">Locked</div>
       <p className="pt-2 font-num text-chip leading-body text-ink-on-turf">

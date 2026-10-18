@@ -76,9 +76,10 @@ export function ScheduleStrip({ today = new Date() }: { today?: Date }) {
   if (SCHEDULE.length === 0) return null;
 
   return (
-    <section className="flex-none border-b border-rule bg-paper-2">
-      {/* No heading and no rule of its own: the masthead's border closes off
-          the block above, so the first day starts straight underneath it. */}
+    <section className="flex-none border-b-strong border-ink bg-paper-2">
+      {/* The top block on the board, so it closes itself off underneath with
+          the strong rule the masthead used to carry. No heading: three days
+          with their marks need no label. */}
       <ol>
         {SCHEDULE.map((day) => (
           <Day key={day.date} day={day} state={dayState(day.date, today)} />
